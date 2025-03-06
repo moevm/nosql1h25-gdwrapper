@@ -21,7 +21,7 @@
 
 ![Use-case](ui_mockup.jpg)
 
-![Редактировать](https://www.figma.com/design/244ALclVkmHAnxmEke1yF1/Figma-basics?node-id=1669-162202&t=RmTQcVl8X5wwRf3z-1)
+[Редактировать](https://www.figma.com/design/244ALclVkmHAnxmEke1yF1/Figma-basics?node-id=1669-162202&t=RmTQcVl8X5wwRf3z-1)
 
 ## Предварительная проверка заданий
 
