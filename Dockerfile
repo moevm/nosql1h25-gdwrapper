@@ -1,17 +1,13 @@
-FROM python:3.12-alpine
-
-RUN addgroup --system gdwrapper && adduser --system --ingroup gdwrapper --disabled-password gdwrapper
-
-USER gdwrapper
-
-RUN cd ~ && mkdir app
+FROM python:3.9-slim
 
 WORKDIR /app
+COPY . /app/
 
-COPY requirements.txt .
+WORKDIR /app/backend
 
-RUN pip3 install -r requirements.txt
+RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
-COPY ./hello_world .
+EXPOSE 8000
 
-CMD [ "python3", "main.py" ]
+CMD ["sh", "-c", "python backend/manage.py migrate && python backend/manage.py runserver 0.0.0.0:8000"]
+
