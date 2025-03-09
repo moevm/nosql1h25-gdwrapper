@@ -1,33 +1,36 @@
-version: '3.1'
+version: '3.8'
 
 services:
-
-  mongo:
-    image: mongo
-    restart: always
-    ports:
-      - ${MONGO_DB_PORT}:${MONGO_DB_PORT}
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-    networks:
-      - gdwrapper_network
-
-
-  gdwrapper:
-    image: gdwrapepr
+  web:
     build: .
+    container_name: django_app
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file: .env
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_DB_HOST: ${MONGO_DB_HOST}
-      MONGO_DB_PORT: ${MONGO_DB_PORT}
-    depends_on:
-      - mongo
-    networks:
-      - gdwrapper_network
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
 
+  mongodb:
+    image: mongo:4.4
+    container_name: mongo_db
+    restart: always
+    env_file: .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${DB_NAME}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
 
-networks:
-  gdwrapper_network:
-    driver: bridge
+volumes:
+  mongo-data:
