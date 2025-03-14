@@ -26,7 +26,7 @@ DEBUG = True
 DB_NAME = config.get("DB_NAME")
 DB_USER = config.get("DB_USER")
 DB_PASSWORD = config.get("DB_PASSWORD")
-DATABASE_HOST = config.get("DATABASE_HOST", "mongodb")
+DATABASE_HOST = config.get("DATABASE_HOST", "mongo_db")
 DATABASE_PORT = config.get("DATABASE_PORT", "27017")
 
 # Экранируем пароль для корректного формирования URI
