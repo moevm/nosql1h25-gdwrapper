@@ -1,2 +1,3 @@
 /gdwrapper/backend/__pycache__
 /gdwrapper/frontend/__pycache__
+.env
