@@ -44,6 +44,25 @@ DATABASES = {
     }
 }
 
+
+# Google Drive API settings
+GD_CREDENTIALS_PATH = path_join(BASE_DIR.parent, "credentials.json")
+GD_TOKEN_PATH = path_join(BASE_DIR.parent, "token.json")
+GD_SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
+GD_FIELDS = [
+            'mimeType',
+            'size',
+            'permissions',
+            'id',
+            'name',
+            'createdTime',
+            'modifiedTime',
+            'capabilities',
+            'parents'
+          ]
+GD_AUTH_CALLBACK_URL = 'http://localhost:8000/testauth'
+
+
 # Остальные настройки (INSTALLED_APPS, MIDDLEWARE, TEMPLATES, WSGI_APPLICATION и т.д.)
 INSTALLED_APPS = [
     'django.contrib.admin',
