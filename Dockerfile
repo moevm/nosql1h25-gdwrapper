@@ -3,7 +3,7 @@ FROM python:3.9-slim
 WORKDIR /app
 COPY . /app/
 
-WORKDIR /app/gdwrapper
+WORKDIR /app/backend
 
 RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
