@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фильтрация и статистика</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .file-info {
+            margin-bottom: 20px;
+        }
+        .file-info h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .file-info p {
+            margin: 5px 0;
+        }
+        .actions {
+            margin-top: 20px;
+        }
+        .actions button {
+            margin-right: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Фильтрация</h1>
+
+<table>
+    <thead>
+        <tr>
+            <th>название</th>
+            <th>размер</th>
+            <th>по дате</th>
+            <th>по типу</th>
+            <th>по доступу</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>строка</td>
+            <td>Кb</td>
+            <td>от</td>
+            <td>до</td>
+            <td>xlsx, docx...</td>
+        </tr>
+    </tbody>
+</table>
+
+<button class="button" onclick="goToAuth()">Авторизация</button>
+
+<button class="button" onclick="goToStats()">Статистика</button>
+
+<script>
+    function goToAuth() {
+        window.location.href = "auth"; 
+    }
+
+    function goToStats() {
+        window.location.href = "stats";
+    }
+</script>
+<table>
+    <thead>
+        <tr>
+            <th>Поиск</th>
+            <th>сортировка</th>
+            <th></th>
+            <th>скачать выделенное</th>
+            <th>скачать все</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>файл 1</td>
+            <td>строка</td>
+            <td>название</td>
+            <td>дата</td>
+            <td>удалить выделенное</td>
+            <td>удалить все</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>размер</td>
+            <td>тип</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="file-info">
+    <h3>C:/user/...</h3>
+    <p>название</p>
+    <p>дата</p>
+    <p>размер</p>
+    <p>тип</p>
+</div>
+
+<div class="file-info">
+    <h3>C:/user/...</h3>
+    <p>название</p>
+    <p>дата</p>
+    <p>размер</p>
+    <p>тип</p>
+</div>
+
+<div class="actions">
+    <button>Выбрать файл(ы)/папку с компьютера</button>
+    <button>главная страница</button>
+</div>
+
+</body>
+</html> 
