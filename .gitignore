@@ -1,3 +1,4 @@
-/gdwrapper/backend/__pycache__
-/gdwrapper/frontend/__pycache__
+__pycache__
 .env
+.idea/
+.gitignore
