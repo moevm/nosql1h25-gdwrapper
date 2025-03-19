@@ -26,7 +26,7 @@ DEBUG = True
 DB_NAME = config.get("DB_NAME")
 DB_USER = config.get("DB_USER")
 DB_PASSWORD = config.get("DB_PASSWORD")
-DATABASE_HOST = config.get("DATABASE_HOST", "mongodb")
+DATABASE_HOST = config.get("DATABASE_HOST", "mongo_db")
 DATABASE_PORT = config.get("DATABASE_PORT", "27017")
 
 # Экранируем пароль для корректного формирования URI
@@ -71,7 +71,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'frontend',
 ]
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend/static')]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -88,7 +92,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'frontend/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
