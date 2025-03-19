@@ -1,18 +1,10 @@
 from django.shortcuts import render
+from django.http import HttpResponseRedirect, HttpResponse
+from .GoogleApiClient import GoogleApiClient
 
-# def stats(request):
-#     context = {
-#         'users_count': 1,
-#         'orders_count': 1,
-#         'products_count': 5,
-#     }
-#     return render(request, 'frontend/stats.html', context)
 
 def auth(request):
-    context = {
-        'users_count': 1,
-        'orders_count': 1,
-        'products_count': 5,
-    }
-    return render(request, 'frontend/auth.html', context)
+    auth_url = GoogleApiClient.authorizeUser()
+    if auth_url: return HttpResponseRedirect(auth_url)
+    else: return HttpResponse('err')
 

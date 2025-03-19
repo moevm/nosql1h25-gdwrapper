@@ -2,3 +2,6 @@ __pycache__
 .env
 .idea/
 .gitignore
+venv
+credentials.json
+token.json

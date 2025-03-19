@@ -30,7 +30,6 @@ DATABASE_HOST = config.get("DATABASE_HOST", "mongo_db")
 DATABASE_PORT = config.get("DATABASE_PORT", "27017")
 
 # Экранируем пароль для корректного формирования URI
-print(DB_PASSWORD)
 DB_PASSWORD_ENCODED = urllib.parse.quote_plus(DB_PASSWORD)
 
 
@@ -73,11 +72,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'frontend',
 ]
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'frontend/static')]
+STATICFILES_DIRS = [BASE_DIR / '../static']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -94,7 +92,7 @@ ROOT_URLCONF = 'gdwrapper.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'frontend/templates')],
+        'DIRS': [BASE_DIR / '../templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
