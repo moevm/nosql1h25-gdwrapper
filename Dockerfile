@@ -3,8 +3,6 @@ FROM python:3.9-slim
 WORKDIR /app
 COPY . /app/
 
-WORKDIR /app/gdwrapper
-
 RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
 EXPOSE 8000
