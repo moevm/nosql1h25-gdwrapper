@@ -6,5 +6,5 @@ app_name = 'auth'
 urlpatterns = [
     # path('stats/', views.stats, name='stats'),
     path('', views.auth, name='auth'),
-    #callback_url
+    path('callback/', views.callback, name='callback')
 ]
