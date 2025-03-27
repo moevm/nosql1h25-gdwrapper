@@ -10,7 +10,7 @@ mongo_service = MongoService()
 
 @ensure_csrf_cookie
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'gdwrapper/index.html')
 
 
 def stats(request):
