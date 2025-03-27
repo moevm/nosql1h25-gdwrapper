@@ -4,7 +4,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from ..settings import GD_CREDENTIALS_PATH, GD_FIELDS, GD_SCOPES, GD_TOKEN_PATH, GD_AUTH_CALLBACK_URL
+from gdwrapper.settings import GD_CREDENTIALS_PATH, GD_FIELDS, GD_SCOPES, GD_TOKEN_PATH, GD_AUTH_CALLBACK_URL
 
 
 class GoogleApiClient:

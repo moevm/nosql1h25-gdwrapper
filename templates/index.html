@@ -71,13 +71,53 @@
 
 <button class="button" onclick="goToStats()">Статистика</button>
 
+<button class="button" onclick="refresh()">Обновить</button>
+
 <script>
     function goToAuth() {
-        window.location.href = "auth"; 
+        window.location.href = "{% url 'auth:auth' %}"; 
     }
 
     function goToStats() {
         window.location.href = "stats";
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function refresh() {
+        fetch('refresh/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status) {
+                alert(data.status);
+            } else if (data.error) {
+                alert("Ошибка: " + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при обновлении данных');
+        });
     }
 </script>
 <table>
