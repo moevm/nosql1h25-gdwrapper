@@ -1,11 +1,25 @@
 <header class="header">
     <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-start">
             <h1 class="h3 mb-0">gdwrapper</h1>
-            <div class="header-buttons d-flex gap-2">
-                <a href="{% url 'index' %}" class="btn btn-outline-light">Просмотр файлов</a>
-                <a href="{% url 'stats' %}" class="btn btn-outline-light">Статистика</a>
-                <a href="{% url 'auth:auth' %}" class="btn btn-light">Авторизоваться</a>
+            
+            <!-- Кнопки для десктопа -->
+            <div class="desktop-buttons d-flex gap-2">
+                <a href="{% url 'index' %}" class="nav-link {% if request.resolver_match.view_name == 'index' %}active{% endif %}">Просмотр файлов</a>
+                <a href="{% url 'stats' %}" class="nav-link {% if request.resolver_match.view_name == 'stats' %}active{% endif %}">Статистика</a>
+                <a href="{% url 'auth:auth' %}" class="nav-link {% if request.resolver_match.view_name == 'auth:auth' %}active{% endif %}">Авторизоваться</a>
+            </div>
+            
+            <!-- Бургер-меню для мобильных -->
+            <div class="mobile-menu-container">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu" aria-expanded="false">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse mobile-menu" id="mobileMenu">
+                    <a href="{% url 'index' %}" class="nav-link {% if request.resolver_match.view_name == 'index' %}active{% endif %}">Просмотр файлов</a>
+                    <a href="{% url 'stats' %}" class="nav-link {% if request.resolver_match.view_name == 'stats' %}active{% endif %}">Статистика</a>
+                    <a href="{% url 'auth:auth' %}" class="nav-link {% if request.resolver_match.view_name == 'auth:auth' %}active{% endif %}">Авторизоваться</a>
+                </div>
             </div>
         </div>
     </div>
