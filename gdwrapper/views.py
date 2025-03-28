@@ -10,16 +10,11 @@ mongo_service = MongoService()
 
 @ensure_csrf_cookie
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'gdwrapper/index.html')
 
 
 def stats(request):
-    context = {
-        'users_count': 1,
-        'orders_count': 1,
-        'products_count': 5,
-    }
-    return render(request, 'stats.html', context)
+    return render(request, 'gdwrapper/stats.html')
 
 
 @require_http_methods(["GET"])

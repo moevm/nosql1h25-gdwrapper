@@ -1,0 +1,41 @@
+.filter-bar {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+.file-table {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.action-buttons {
+    margin-bottom: 20px;
+}
+
+.details-btn {
+    white-space: nowrap;
+}
+
+.buttons-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.buttons-group .btn {
+    margin: 2px 0;
+}
+
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .buttons-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

@@ -8,6 +8,6 @@ urlpatterns = [
     path('files/', views.get_all_files, name='get_all_files'),
     #path('admin/', admin.site.urls),
     path('auth/', include('auth.urls')),
-    path('stats/', views.stats),
-    path('', views.index)
+    path('stats/', views.stats, name='stats'),
+    path('', views.index, name='index')
 ]
