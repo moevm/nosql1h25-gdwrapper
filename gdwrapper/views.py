@@ -14,12 +14,7 @@ def index(request):
 
 
 def stats(request):
-    context = {
-        'users_count': 1,
-        'orders_count': 1,
-        'products_count': 5,
-    }
-    return render(request, 'stats.html', context)
+    return render(request, 'gdwrapper/stats.html')
 
 
 @require_http_methods(["GET"])
