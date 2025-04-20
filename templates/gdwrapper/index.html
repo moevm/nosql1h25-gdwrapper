@@ -52,8 +52,9 @@
 <!-- Кнопки действий -->
 <div class="action-buttons d-flex justify-content-between flex-wrap">
     <div class="buttons-group">
-        <button class="btn btn-outline-primary">Выбрать всё</button>
-        <a href="{% url 'refresh_data' %}" class="btn btn-outline-primary">Синхронизировать данные</a>
+        <button class="btn btn-outline-primary" onclick="setAllFilesCheckboxes(true)">Выбрать всё</button>
+        <button class="btn btn-outline-primary" onclick="setAllFilesCheckboxes(false)">Отменить выбор</button>
+        <a href="{% url 'refresh_data' %}" onclick="refreshData(event)" class="btn btn-outline-primary">Синхронизировать данные</a>
     </div>
     <div class="buttons-group mt-2 mt-md-0">
         <button class="btn btn-danger">Удалить выбранные</button>
@@ -77,38 +78,17 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><input type="checkbox" class="form-check-input"></td>
-                    <td>Документ проекта.pdf</td>
-                    <td>PDF</td>
-                    <td>2.4 MB</td>
-                    <td>2025-03-15</td>
-                    <td><button class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
-                </tr>
-                <tr>
-                    <td><input type="checkbox" class="form-check-input"></td>
-                    <td>Изображение1.jpg</td>
-                    <td>JPEG</td>
-                    <td>1.8 MB</td>
-                    <td>2025-03-10</td>
-                    <td><button class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
-                </tr>
-                <tr>
-                    <td><input type="checkbox" class="form-check-input"></td>
-                    <td>Презентация.pptx</td>
-                    <td>PPTX</td>
-                    <td>5.7 MB</td>
-                    <td>2025-02-28</td>
-                    <td><button class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
-                </tr>
-                <tr>
-                    <td><input type="checkbox" class="form-check-input"></td>
-                    <td>Отчет.xlsx</td>
-                    <td>XLSX</td>
-                    <td>1.2 MB</td>
-                    <td>2025-03-20</td>
-                    <td><button class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
-                </tr>
+                {% for document in documents %}
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input"></td>
+                        <td>{{ document.name }}</td>
+                        <td>{{ document.mimeType }}</td>
+                        <td>{{ document.size }}</td>
+                        <td>{{ document.modifiedTime }}</td>
+                        <td><button document_id="{{ document.id }}" onclick='showMoreInfo(this)' class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
+                        {{ document | json_script:document.id  }}
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
@@ -127,39 +107,34 @@
             <div class="modal-body">
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Название:</div>
-                    <div class="col-md-8" id="detailFileName">Документ проекта.pdf</div>
+                    <div class="col-md-8" id="detailFileName"></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Тип:</div>
-                    <div class="col-md-8" id="detailFileType">PDF</div>
+                    <div class="col-md-8" id="detailFileType"></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Размер:</div>
-                    <div class="col-md-8" id="detailFileSize">2.4 MB</div>
+                    <div class="col-md-8" id="detailFileSize"></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Дата создания:</div>
-                    <div class="col-md-8" id="detailFileCreated">2025-03-10 14:30:22</div>
+                    <div class="col-md-8" id="detailFileCreated"></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Дата изменения:</div>
-                    <div class="col-md-8" id="detailFileModified">2025-03-15 09:45:10</div>
+                    <div class="col-md-8" id="detailFileModified"></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Владелец:</div>
-                    <div class="col-md-8" id="detailFileOwner">Иванов Иван</div>
+                    <div class="col-md-8" id="detailFileOwner"></div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Права доступа:</div>
-                    <div class="col-md-8" id="detailFilePermissions">Чтение и запись</div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 fw-bold">Дополнительная информация:</div>
-                    <div class="col-md-8" id="detailFileAdditional">Файл содержит финальную версию документа проекта за 1 квартал 2025 года.</div>
+                    <pre class="col-md-8" id="detailFilePermissions"></pre>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
                 <button type="button" class="btn btn-primary">Скачать</button>
             </div>
         </div>

@@ -5,12 +5,15 @@ from django.views.decorators.http import require_http_methods
 
 from auth.GoogleApiClient import GoogleApiClient
 from gdwrapper.services.MongoService import MongoService
+from .document_formatter.formatters import formatters_manager
 
 mongo_service = MongoService()
 
 @ensure_csrf_cookie
 def index(request):
-    return render(request, 'gdwrapper/index.html')
+    documents = mongo_service.get_all_documents()
+    for document in documents: formatters_manager.apply_formatters(document)
+    return render(request, 'gdwrapper/index.html', {'documents': documents})
 
 
 def stats(request):

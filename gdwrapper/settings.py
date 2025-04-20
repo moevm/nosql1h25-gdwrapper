@@ -59,7 +59,8 @@ GD_FIELDS = [
             'createdTime',
             'modifiedTime',
             'capabilities',
-            'parents'
+            'parents',
+            'owners'
           ]
 GD_AUTH_CALLBACK_URL = 'http://localhost:8000/auth/callback'
 HOME_PAGE_URL = 'http://localhost:8000/'
