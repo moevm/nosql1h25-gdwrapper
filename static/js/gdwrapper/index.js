@@ -1,20 +1,44 @@
-// Обработчик для кнопок "Подробная информация"
-document.querySelectorAll('.details-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const row = this.closest('tr');
-        const cells = row.querySelectorAll('td');
-        
-        // Заполняем модальное окно данными из строки таблицы
-        document.getElementById('detailFileName').textContent = cells[1].textContent;
-        document.getElementById('detailFileType').textContent = cells[2].textContent;
-        document.getElementById('detailFileSize').textContent = cells[3].textContent;
-        
-        // Пример дополнительных данных (можно заменить на реальные данные)
-        document.getElementById('detailFileCreated').textContent = cells[4].textContent + ' 00:00:00';
-        document.getElementById('detailFileModified').textContent = cells[4].textContent + ' 00:00:00';
-        document.getElementById('detailFileOwner').textContent = 'Иванов Иван';
-        document.getElementById('detailFilePermissions').textContent = 'Чтение и запись';
-        document.getElementById('detailFileAdditional').textContent = 
-            `Файл ${cells[1].textContent} содержит важную информацию о проекте.`;
+function showMoreInfo(btn) {
+    const documentString = document.getElementById(btn.getAttribute('document_id')).textContent;
+    const document_ = JSON.parse(documentString);
+    document.getElementById('detailFileName').textContent = document_.name;
+    document.getElementById('detailFileType').textContent = document_.mimeType;
+    document.getElementById('detailFileSize').textContent = document_.size;
+    document.getElementById('detailFileCreated').textContent = document_.createdTime;
+    document.getElementById('detailFileModified').textContent = document_.modifiedTime;
+    document.getElementById('detailFileOwner').textContent = document_.ownerEmail;
+    document.getElementById('detailFilePermissions').textContent = JSON.stringify(document_.capabilities, null, 2);
+}
+
+function refreshData(event) {
+    event.preventDefault();
+    
+    const url = event.currentTarget.getAttribute('href');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Ошибка сервера');
+        return response.json();
+    })
+    .then(data => {
+        alert('Данные успешно синхронизированы', 'success');
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+        alert('Ошибка при синхронизации данных', 'danger');
     });
-});
+}
+
+
+function setAllFilesCheckboxes(value){
+    document.querySelectorAll('.form-check-input').forEach(checkbox => {
+        checkbox.checked = value;
+    });
+}
