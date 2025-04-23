@@ -23,16 +23,15 @@ function refreshData(event) {
         }
     })
     .then(response => {
-        if (!response.ok) throw new Error('Ошибка сервера');
         return response.json();
     })
     .then(data => {
-        alert('Данные успешно синхронизированы', 'success');
-        window.location.reload();
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-        alert('Ошибка при синхронизации данных', 'danger');
+        if(data.redirect_to){
+            window.location.href = data.redirect_to;
+        }else{
+            alert('Данные успешно синхронизированы', 'success');
+            window.location.reload();
+        }
     });
 }
 
