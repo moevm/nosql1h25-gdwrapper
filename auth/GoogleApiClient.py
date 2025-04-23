@@ -1,10 +1,13 @@
 from typing import List, Optional
 import os
+from django.urls import reverse
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.auth.exceptions import RefreshError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from gdwrapper.settings import GD_CREDENTIALS_PATH, GD_FIELDS, GD_SCOPES, GD_TOKEN_PATH, GD_AUTH_CALLBACK_URL
+from .exceptions import UserNotAuthenticated
 
 
 class GoogleApiClient:
@@ -20,8 +23,14 @@ class GoogleApiClient:
         """
         if os.path.exists(GD_TOKEN_PATH):
             creds = Credentials.from_authorized_user_file(GD_TOKEN_PATH, GD_SCOPES)
+            if creds.expired and creds.refresh_token:
+                try:
+                    creds.refresh(Request())
+                except RefreshError as e:
+                    os.remove(GD_TOKEN_PATH)
+                    raise UserNotAuthenticated()   
             self.__service = build("drive", "v3", credentials=creds)
-        else: raise Exception('User is not authorized')
+        else: raise UserNotAuthenticated()
     
     @staticmethod
     def authorizeUser() -> Optional[str]:
@@ -31,20 +40,14 @@ class GoogleApiClient:
         Returns:
             Optional[str]: Auth URL
         """
-        creds = None
         if os.path.exists(GD_TOKEN_PATH):
-            creds = Credentials.from_authorized_user_file(GD_TOKEN_PATH, GD_SCOPES)
             return 
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    GD_CREDENTIALS_PATH, GD_SCOPES,
-                    redirect_uri=GD_AUTH_CALLBACK_URL
-                )
-                auth_url, _ = flow.authorization_url(prompt='consent')
-                return auth_url
+        flow = InstalledAppFlow.from_client_secrets_file(
+            GD_CREDENTIALS_PATH, GD_SCOPES,
+            redirect_uri=GD_AUTH_CALLBACK_URL
+        )
+        auth_url, _ = flow.authorization_url(prompt='consent')
+        return auth_url
 
     @staticmethod
     def createUserToken(code: str):
@@ -60,6 +63,10 @@ class GoogleApiClient:
         creds = flow.credentials
         with open(GD_TOKEN_PATH, "w") as token:
             token.write(creds.to_json())
+
+    @staticmethod
+    def logout():
+        if os.path.exists(GD_TOKEN_PATH): os.remove(GD_TOKEN_PATH)
 
     def getAllFiles(self) -> List[dict]:
         """Make request to Google Drive API to get users files.
