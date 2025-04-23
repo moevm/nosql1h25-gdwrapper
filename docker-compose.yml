@@ -6,7 +6,6 @@ services:
     env_file: .env
     volumes:
       - .:/app
-      - /app/frontend/static
     ports:
       - "8000:8000"
     environment:
