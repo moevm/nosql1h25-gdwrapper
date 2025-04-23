@@ -1,145 +1,173 @@
-{% extends 'base.html' %}
+{# gdwrapper/index.html #}
+{% extends "base.html" %}
+{% load static humanize %}
 
-{% block title %}
-    Просмотр файлов
-{% endblock %}
+{% block title %}Просмотр файлов{% endblock %}
 
 {% block styles %}
-    {% load static %}
-    <link href="{% static 'css/gdwrapper/index.css' %}" rel="stylesheet">
+  <link href="{% static 'css/gdwrapper/index.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<div class="filter-bar">
-    <div class="row g-3">
-        <div class="col-md-3">
-            <label for="typeFilter" class="form-label">Тип файла</label>
-            <select id="typeFilter" class="form-select">
-                <option selected>Все типы</option>
-                <option>Документы</option>
-                <option>Изображения</option>
-                <option>Видео</option>
-                <option>Аудио</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="dateFilter" class="form-label">Дата</label>
-            <select id="dateFilter" class="form-select">
-                <option selected>Любая дата</option>
-                <option>Сегодня</option>
-                <option>Последние 7 дней</option>
-                <option>Этот месяц</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label for="sizeFilter" class="form-label">Размер</label>
-            <select id="sizeFilter" class="form-select">
-                <option selected>Любой размер</option>
-                <option>Менее 1 MB</option>
-                <option>1-10 MB</option>
-                <option>Более 10 MB</option>
-            </select>
-        </div>
-        <div class="col-md-3 d-flex align-items-end gap-2 flex-wrap">
-            <div class="buttons-group">
-                <button class="btn btn-outline-secondary w-100">Применить</button>
-                <button class="btn btn-outline-danger w-100">Сбросить</button>
-            </div>
-        </div>
+{# ---------------- ФИЛЬТРЫ ---------------- #}
+<form method="get" class="filter-bar mb-4">
+  <div class="row g-3">
+
+    <div class="col-md-3">
+      <label for="mime_group" class="form-label">Тип файла</label>
+      <select id="mime_group" name="mime_group" class="form-select">
+        <option value=""            {% if not filters.mime_group %}selected{% endif %}>Любой</option>
+        <option value="folder"      {% if filters.mime_group == 'folder' %}selected{% endif %}>Папки</option>
+        <option value="document"    {% if filters.mime_group == 'document' %}selected{% endif %}>Документы</option>
+        <option value="spreadsheet" {% if filters.mime_group == 'spreadsheet' %}selected{% endif %}>Таблицы</option>
+        <option value="presentation"{% if filters.mime_group == 'presentation' %}selected{% endif %}>Презентации</option>
+        <option value="pdf"         {% if filters.mime_group == 'pdf' %}selected{% endif %}>PDF</option>
+        <option value="image"       {% if filters.mime_group == 'image' %}selected{% endif %}>Изображения</option>
+        <option value="video"       {% if filters.mime_group == 'video' %}selected{% endif %}>Видео</option>
+        <option value="audio"       {% if filters.mime_group == 'audio' %}selected{% endif %}>Аудио</option>
+      </select>
     </div>
+
+    <div class="col-md-3">
+      <label for="name" class="form-label">Имя содержит</label>
+      <input id="name" name="name" class="form-control" type="text"
+             value="{{ filters.name|default_if_none:'' }}">
+    </div>
+
+    <div class="col-md-3">
+      <label for="owner_email" class="form-label">E-mail владельца</label>
+      <input id="owner_email" name="owner_email" class="form-control" type="email"
+             value="{{ filters.owner_email|default_if_none:'' }}">
+    </div>
+
+    <div class="col-md-3">
+      <label for="size_range" class="form-label">Размер файла</label>
+      <select id="size_range" name="size_range" class="form-select">
+         <option value=""        {% if not filters.size_range %}selected{% endif %}>Любой</option>
+         <option value="lt100"   {% if filters.size_range == 'lt100' %}selected{% endif %}>до 100 КБ</option>
+         <option value="100_500" {% if filters.size_range == '100_500' %}selected{% endif %}>100 – 500 КБ</option>
+         <option value="500_1m"  {% if filters.size_range == '500_1m' %}selected{% endif %}>500 КБ – 1 МБ</option>
+         <option value="1m_10m"  {% if filters.size_range == '1m_10m' %}selected{% endif %}>1 – 10 МБ</option>
+         <option value="10m_100m"  {% if filters.size_range == '1m_10m' %}selected{% endif %}>10 – 100 МБ</option>
+         <option value="gt100m"   {% if filters.size_range == 'gt10m' %}selected{% endif %}>более 100 МБ</option>
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Создан (от / до)</label>
+      <div class="input-group">
+        <input class="form-control" type="date" name="created_from"
+               value="{{ filters.created_from|default_if_none:'' }}">
+        <input class="form-control" type="date" name="created_to"
+               value="{{ filters.created_to|default_if_none:'' }}">
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Изменён (от / до)</label>
+      <div class="input-group">
+        <input class="form-control" type="date" name="modified_from"
+               value="{{ filters.modified_from|default_if_none:'' }}">
+        <input class="form-control" type="date" name="modified_to"
+               value="{{ filters.modified_to|default_if_none:'' }}">
+      </div>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end gap-2 flex-wrap">
+      <button class="btn btn-outline-secondary w-100" type="submit">Применить</button>
+      <a class="btn btn-outline-danger w-100" href="{% url 'index' %}">Сбросить</a>
+    </div>
+
+  </div>
+</form>
+
+{# ---------------- КНОПКИ ДЕЙСТВИЙ ---------------- #}
+<div class="action-buttons d-flex justify-content-between flex-wrap mb-3">
+  <div class="buttons-group">
+    <button class="btn btn-outline-primary" type="button"
+            onclick="setAllFilesCheckboxes(true)">Выбрать всё</button>
+    <button class="btn btn-outline-primary" type="button"
+            onclick="setAllFilesCheckboxes(false)">Отменить выбор</button>
+    <a class="btn btn-outline-primary" href="{% url 'refresh_data' %}"
+       onclick="refreshData(event)">Синхронизировать данные</a>
+  </div>
+  <div class="buttons-group mt-2 mt-md-0">
+    <button class="btn btn-danger">Удалить выбранные</button>
+    <button class="btn btn-success">Скачать выбранные</button>
+    <button class="btn btn-primary">Загрузить файлы</button>
+  </div>
 </div>
 
-<!-- Кнопки действий -->
-<div class="action-buttons d-flex justify-content-between flex-wrap">
-    <div class="buttons-group">
-        <button class="btn btn-outline-primary" onclick="setAllFilesCheckboxes(true)">Выбрать всё</button>
-        <button class="btn btn-outline-primary" onclick="setAllFilesCheckboxes(false)">Отменить выбор</button>
-        <a href="{% url 'refresh_data' %}" onclick="refreshData(event)" class="btn btn-outline-primary">Синхронизировать данные</a>
-    </div>
-    <div class="buttons-group mt-2 mt-md-0">
-        <button class="btn btn-danger">Удалить выбранные</button>
-        <button class="btn btn-success">Скачать выбранные</button>
-        <button class="btn btn-primary">Загрузить файлы</button>
-    </div>
-</div>
-
-<!-- Таблица с файлами -->
+{# ---------------- ТАБЛИЦА ---------------- #}
 <div class="file-table">
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th scope="col" style="width: 40px;"></th>
-                    <th scope="col">Название</th>
-                    <th scope="col">Тип</th>
-                    <th scope="col">Размер</th>
-                    <th scope="col">Дата изменения</th>
-                    <th scope="col">Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for document in documents %}
-                    <tr>
-                        <td><input type="checkbox" class="form-check-input"></td>
-                        <td>{{ document.name }}</td>
-                        <td>{{ document.mimeType }}</td>
-                        <td>{{ document.size }}</td>
-                        <td>{{ document.modifiedTime }}</td>
-                        <td><button document_id="{{ document.id }}" onclick='showMoreInfo(this)' class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
-                        {{ document | json_script:document.id  }}
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th style="width:40px"></th>
+          <th>Название</th>
+          <th>Тип</th>
+          <th>Размер (байт)</th>
+          <th>Дата изменения</th>
+          <th>Действия</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for document in documents %}
+          <tr>
+            <td><input class="form-check-input" type="checkbox"></td>
+            <td>{{ document.name }}</td>
+            <td>{{ document.mimeType }}</td>
+            <td>{{ document.size|intcomma }}</td>
+            <td>{{ document.modifiedTime }}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-info"
+                      data-bs-toggle="modal"
+                      data-bs-target="#fileDetailsModal"
+                      document_id="{{ document.id }}"
+                      onclick="showMoreInfo(this)">
+                Подробнее
+              </button>
+            </td>
+            {{ document|json_script:document.id }}
+          </tr>
+        {% empty %}
+          <tr><td colspan="6" class="text-center py-4">Ничего не найдено</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}
 
-
 {% block body_tail %}
-<div class="modal fade" id="fileDetailsModal" tabindex="-1" aria-labelledby="fileDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="fileDetailsModalLabel">Подробная информация о файле</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Название:</div>
-                    <div class="col-md-8" id="detailFileName"></div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Тип:</div>
-                    <div class="col-md-8" id="detailFileType"></div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Размер:</div>
-                    <div class="col-md-8" id="detailFileSize"></div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Дата создания:</div>
-                    <div class="col-md-8" id="detailFileCreated"></div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Дата изменения:</div>
-                    <div class="col-md-8" id="detailFileModified"></div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Владелец:</div>
-                    <div class="col-md-8" id="detailFileOwner"></div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Права доступа:</div>
-                    <pre class="col-md-8" id="detailFilePermissions"></pre>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary">Скачать</button>
-            </div>
-        </div>
+{# ---------------- МОДАЛЬНОЕ ОКНО ---------------- #}
+<div class="modal fade" id="fileDetailsModal" tabindex="-1"
+     aria-labelledby="fileDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="fileDetailsModalLabel">Подробная информация о файле</h5>
+        <button class="btn-close" type="button" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3"><div class="col-md-4 fw-bold">Название:</div><div class="col-md-8" id="detailFileName"></div></div>
+        <div class="row mb-3"><div class="col-md-4 fw-bold">Тип:</div><div class="col-md-8" id="detailFileType"></div></div>
+        <div class="row mb-3"><div class="col-md-4 fw-bold">Размер:</div><div class="col-md-8" id="detailFileSize"></div></div>
+        <div class="row mb-3"><div class="col-md-4 fw-bold">Дата создания:</div><div class="col-md-8" id="detailFileCreated"></div></div>
+        <div class="row mb-3"><div class="col-md-4 fw-bold">Дата изменения:</div><div class="col-md-8" id="detailFileModified"></div></div>
+        <div class="row mb-3"><div class="col-md-4 fw-bold">Владелец:</div><div class="col-md-8" id="detailFileOwner"></div></div>
+        <div class="row mb-3"><div class="col-md-4 fw-bold">Права доступа:</div><pre class="col-md-8" id="detailFilePermissions"></pre></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" type="button">Скачать</button>
+      </div>
     </div>
+  </div>
 </div>
 
 <script src="{% static 'js/gdwrapper/index.js' %}"></script>
+<script>
+
+</script>
 {% endblock %}
