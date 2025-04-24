@@ -1,8 +1,3 @@
-function getCookie(name){
-  const v = `; ${document.cookie}`.split(`; ${name}=`);
-  return v.length === 2 ? v.pop().split(';').shift() : undefined;
-}
-
 function showMoreInfo(btn){
   const data = JSON.parse(document.getElementById(btn.getAttribute('document_id')).textContent);
   document.getElementById('detailFileName').textContent   = data.name;
