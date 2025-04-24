@@ -1,13 +1,13 @@
-function showMoreInfo(btn) {
-    const documentString = document.getElementById(btn.getAttribute('document_id')).textContent;
-    const document_ = JSON.parse(documentString);
-    document.getElementById('detailFileName').textContent = document_.name;
-    document.getElementById('detailFileType').textContent = document_.mimeType;
-    document.getElementById('detailFileSize').textContent = document_.size;
-    document.getElementById('detailFileCreated').textContent = document_.createdTime;
-    document.getElementById('detailFileModified').textContent = document_.modifiedTime;
-    document.getElementById('detailFileOwner').textContent = document_.ownerEmail;
-    document.getElementById('detailFilePermissions').textContent = JSON.stringify(document_.capabilities, null, 2);
+function showMoreInfo(btn){
+  const data = JSON.parse(document.getElementById(btn.getAttribute('document_id')).textContent);
+  document.getElementById('detailFileName').textContent   = data.name;
+  document.getElementById('detailFileType').textContent   = data.mimeType;
+  document.getElementById('detailFileSize').textContent   = data.size;
+  document.getElementById('detailFileCreated').textContent  = data.createdTime;
+  document.getElementById('detailFileModified').textContent = data.modifiedTime;
+  document.getElementById('detailFileOwner').textContent     = data.ownerEmail;
+  document.getElementById('detailFilePermissions').textContent =
+      JSON.stringify(data.capabilities, null, 2);
 }
 
 function refreshData(event) {
@@ -35,9 +35,6 @@ function refreshData(event) {
     });
 }
 
-
-function setAllFilesCheckboxes(value){
-    document.querySelectorAll('.form-check-input').forEach(checkbox => {
-        checkbox.checked = value;
-    });
+function setAllFilesCheckboxes(v){
+  document.querySelectorAll('.form-check-input').forEach(cb=>cb.checked=v);
 }

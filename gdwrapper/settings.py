@@ -67,6 +67,7 @@ GD_AUTH_CALLBACK_URL = 'http://localhost:8000/auth/callback'
 
 # Остальные настройки (INSTALLED_APPS, MIDDLEWARE, TEMPLATES, WSGI_APPLICATION и т.д.)
 INSTALLED_APPS = [
+    'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
