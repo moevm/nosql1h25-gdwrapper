@@ -29,6 +29,18 @@
     margin: 2px 0;
 }
 
+.sad-face-icon {
+    font-size: 10rem;
+    color: #4a6baf;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
 @media (max-width: 768px) {
     .action-buttons {
         flex-direction: column;

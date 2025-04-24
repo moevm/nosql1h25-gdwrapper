@@ -7,7 +7,11 @@
             <div class="desktop-buttons d-flex gap-2">
                 <a href="{% url 'index' %}" class="nav-link {% if request.resolver_match.view_name == 'index' %}active{% endif %}">Просмотр файлов</a>
                 <a href="{% url 'stats' %}" class="nav-link {% if request.resolver_match.view_name == 'stats' %}active{% endif %}">Статистика</a>
-                <a href="{% url 'auth:auth' %}" class="nav-link {% if request.resolver_match.view_name == 'auth:auth' %}active{% endif %}">Авторизоваться</a>
+                {% if is_authenticated %}
+                    <a href="{% url 'auth:logout' %}" class="nav-link" onclick="return confirm('Вы уверены, что хотите выйти из аккаунта?')">Выход</a>
+                {% else %}
+                    <a href="{% url 'auth:auth' %}" class="nav-link">Авторизоваться</a>
+                {% endif %}
             </div>
             
             <!-- Бургер-меню для мобильных -->
@@ -18,7 +22,11 @@
                 <div class="collapse mobile-menu" id="mobileMenu">
                     <a href="{% url 'index' %}" class="nav-link {% if request.resolver_match.view_name == 'index' %}active{% endif %}">Просмотр файлов</a>
                     <a href="{% url 'stats' %}" class="nav-link {% if request.resolver_match.view_name == 'stats' %}active{% endif %}">Статистика</a>
-                    <a href="{% url 'auth:auth' %}" class="nav-link {% if request.resolver_match.view_name == 'auth:auth' %}active{% endif %}">Авторизоваться</a>
+                    {% if is_authenticated %}
+                        <a href="{% url 'auth:logout' %}" class="nav-link">Выход</a>
+                    {% else %}
+                        <a href="{% url 'auth:auth' %}" class="nav-link">Авторизоваться</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

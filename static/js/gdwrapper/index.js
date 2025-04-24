@@ -10,15 +10,29 @@ function showMoreInfo(btn){
       JSON.stringify(data.capabilities, null, 2);
 }
 
-function refreshData(event){
-  event.preventDefault();
-  fetch(event.currentTarget.href,{
-    method:'POST',
-    headers:{'X-CSRFToken':getCookie('csrftoken'),'Accept':'application/json'}
-  })
-  .then(r=>{if(!r.ok)throw new Error();return r.json();})
-  .then(()=>{alert('Данные успешно синхронизированы');location.reload();})
-  .catch(()=>alert('Ошибка при синхронизации данных'));
+function refreshData(event) {
+    event.preventDefault();
+    
+    const url = event.currentTarget.getAttribute('href');
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        if(data.redirect_to){
+            window.location.href = data.redirect_to;
+        }else{
+            alert('Данные успешно синхронизированы', 'success');
+            window.location.reload();
+        }
+    });
 }
 
 function setAllFilesCheckboxes(v){

@@ -63,7 +63,6 @@ GD_FIELDS = [
             'owners'
           ]
 GD_AUTH_CALLBACK_URL = 'http://localhost:8000/auth/callback'
-HOME_PAGE_URL = 'http://localhost:8000/'
 
 
 # Остальные настройки (INSTALLED_APPS, MIDDLEWARE, TEMPLATES, WSGI_APPLICATION и т.д.)
