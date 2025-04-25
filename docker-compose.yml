@@ -16,7 +16,7 @@ services:
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_PORT: ${DATABASE_PORT}
 
-  mongodb:
+  db:
     image: mongo:4.4
     container_name: mongo_db
     restart: always
