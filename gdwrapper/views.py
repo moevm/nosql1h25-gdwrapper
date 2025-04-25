@@ -96,7 +96,11 @@ def index(request):
 
 
 def stats(request):
-    return render(request, "gdwrapper/stats.html")
+    is_authenticated = False
+    if os.path.exists(GD_TOKEN_PATH): is_authenticated = True
+    return render(request, "gdwrapper/stats.html", {
+        'is_authenticated': is_authenticated,
+    })
 
 
 @require_http_methods(["GET"])
