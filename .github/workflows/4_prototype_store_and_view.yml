@@ -37,10 +37,11 @@ jobs:
       - name: Build docker-compose
         run: |
           docker compose build --no-cache
-
-      - name: Run docker-compose
-        run: |
-          docker compose up -d
+      
+      # Особый случай, проверка запуска вручную.
+      # - name: Run docker-compose
+      #   run: |
+      #     docker compose up -d
       
       - name: check
         run: |
