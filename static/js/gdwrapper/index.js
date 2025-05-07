@@ -93,47 +93,39 @@ async function importData() {
         formData.append('file', file);
         formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 секунд таймаут
-
         const response = await fetch("/import_data/", {
             method: 'POST',
             body: formData,
-            signal: controller.signal,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
-        }
 
         const data = await response.json();
         
-        importModal.hide();
-        showToast('Данные успешно импортированы', 'success');
-        
-        setTimeout(() => {
-            window.location.href = "";
-        }, 1500);
+        if (!response.ok) {
+            if (response.status === 207) {
+                showToast(
+                    `Обработано ${data.total_processed} документов. Успешно: ${data.imported + data.updated}, с ошибками: ${data.error_count}`,
+                    'warning'
+                );
+                errorDiv.textContent = `Примеры ошибок: ${data.sample_errors?.join('; ') || 'нет'}`;
+                errorDiv.classList.remove('d-none');
+            } else {
+                throw new Error(data?.error || `Ошибка сервера: ${response.status}`);
+            }
+        } else {
+            showToast(
+                `Успешно импортировано ${data.imported} документов, обновлено ${data.updated} из ${data.total_processed}`,
+                'success'
+            );
+            importModal.hide();
+            setTimeout(() => window.location.reload(), 1500);
+        }
 
     } catch (error) {
         console.error('Import error:', error);
-        
-        let errorMessage = 'Ошибка при импорте данных';
-        
-        if (error.name === 'AbortError') {
-            errorMessage = 'Превышено время ожидания сервера';
-        } else if (error.message.includes('Failed to fetch')) {
-            errorMessage = 'Ошибка соединения с сервером';
-        } else {
-            errorMessage = error.message || error.toString();
-        }
-
-        showError(errorMessage);
+        showError(error.message);
     } finally {
         importBtn.disabled = false;
         spinner.classList.add('d-none');
