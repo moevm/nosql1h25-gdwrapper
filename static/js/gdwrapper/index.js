@@ -40,37 +40,34 @@ function setAllFilesCheckboxes(v){
 }
 
 function exportData() {
-    // Получаем модальное окно без jQuery
-    const exportModal = document.getElementById('exportModal');
-    const modalInstance = bootstrap.Modal.getInstance(exportModal);
-    
-    // Закрываем модальное окно
-    if (modalInstance) {
-        modalInstance.hide();
-    }
-
-    // Показываем уведомление
+    // Показываем уведомление о начале экспорта
     const toast = document.createElement('div');
     toast.className = 'position-fixed bottom-0 end-0 p-3';
     toast.innerHTML = `
-        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <strong class="me-auto">Экспорт данных</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body">
-                <div class="spinner-border spinner-border-sm me-2"></div>
-                Подготовка архива...
+        <div class="toast show align-items-center text-white bg-primary" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <div class="spinner-border spinner-border-sm me-2"></div>
+                    Подготовка JSON файла...
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     `;
-    
     document.body.appendChild(toast);
-
+    
+    // Создаем скрытую ссылку для скачивания
+    const link = document.createElement('a');
+    link.href = "export_data";
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    // Удаляем элементы через 3 секунды
     setTimeout(() => {
-        window.location.href = "export_data";
         toast.remove();
-    }, 500);
+        link.remove();
+    }, 3000);
 }
 
 async function importData() {
@@ -93,8 +90,8 @@ async function importData() {
         }
 
         const file = fileInput.files[0];
-        if (!file.name.toLowerCase().endsWith('.zip')) {
-            throw new Error('Требуется файл в формате ZIP');
+        if (!file.name.toLowerCase().endsWith('.json')) {
+            throw new Error('Требуется файл в формате JSON');
         }
 
         // 2. Подготовка данных

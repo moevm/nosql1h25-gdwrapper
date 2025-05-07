@@ -130,7 +130,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
         <button type="button" class="btn btn-primary" onclick="exportData()">
-          <i class="fas fa-file-archive"></i> Создать архив
+          <i class="fas fa-file-archive"></i> Создать файл
         </button>
       </div>
     </div>
@@ -147,9 +147,9 @@
       </div>
       <div class="modal-body">
         <div class="alert alert-info">
-          <i class="fas fa-info-circle"></i> Выберите ZIP-архив, полученный при экспорте данных
+          <i class="fas fa-info-circle"></i> Выберите JSON-файл, полученный при экспорте данных
         </div>
-        <input type="file" id="importFile" class="form-control" accept=".zip">
+        <input type="file" id="importFile" class="form-control" accept=".json">
         <div id="importError" class="alert alert-danger mt-2 d-none"></div>
       </div>
       <div class="modal-footer">

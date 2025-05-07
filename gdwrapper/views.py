@@ -144,42 +144,30 @@ def refresh_data(request):
 
 @require_http_methods(["GET"])
 def export_data(request):
-    """Экспорт всех данных из MongoDB в ZIP-архиве"""
-    if not os.path.exists(GD_TOKEN_PATH):
-        return JsonResponse({"error": "Требуется авторизация"}, status=403)
-    
+    """Экспорт данных в JSON (без ZIP)"""
     try:
-        # Получаем все данные
-        data = {
-            "metadata": {
-                "app": "GDWrapper",
-                "export_date": datetime.now().isoformat(),
-                "version": "1.0"
-            },
-            "documents": list(mongo_service.get_all_documents())
-        }
+        if not os.path.exists(GD_TOKEN_PATH):
+            return JsonResponse({"error": "Требуется авторизация"}, status=403)
         
-        # Создаем ZIP в памяти
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            # Добавляем данные в JSON
-            json_data = json_util.dumps(data, indent=2)
-            zip_file.writestr('gdwrapper_export.json', json_data)
-            
-            # Добавляем README
-            readme = """Это архив экспорта из GDWrapper
-Содержит метаданные файлов на момент экспорта
-Для импорта используйте соответствующую функцию в приложении"""
-            zip_file.writestr('README.txt', readme)
+        # Получаем данные из MongoDB
+        documents = list(mongo_service.get_all_documents())
         
-        zip_buffer.seek(0)
-        
-        # Формируем имя файла с датой
+        # Формируем имя файла
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"gdwrapper_export_{timestamp}.zip"
+        filename = f"gdwrapper_export_{timestamp}.json"
         
-        # Возвращаем архив
-        response = HttpResponse(zip_buffer, content_type='application/zip')
+        # Конвертируем в JSON с поддержкой ObjectId и дат
+        json_data = json_util.dumps({
+            "metadata": {
+                "export_date": datetime.now().isoformat(),
+                "app_name": "GDWrapper",
+                "document_count": len(documents)
+            },
+            "documents": documents
+        }, indent=2)
+        
+        # Возвращаем JSON файл
+        response = HttpResponse(json_data, content_type='application/json')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
         
@@ -189,7 +177,7 @@ def export_data(request):
 
 @require_http_methods(["POST"])
 def import_data(request):
-    """Обработчик импорта ZIP-архива с файлами"""
+    """Обработчик импорта JSON файла"""
     try:
         # Проверка авторизации (если нужно)
         if os.path.exists(GD_TOKEN_PATH):
@@ -201,45 +189,33 @@ def import_data(request):
         uploaded_file = request.FILES['file']
         mongo_service = MongoService()
 
-        # Временный файл для архива
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            for chunk in uploaded_file.chunks():
-                tmp_file.write(chunk)
-            tmp_path = tmp_file.name
+        # Проверка расширения файла
+        if not uploaded_file.name.lower().endswith('.json'):
+            return JsonResponse({"error": "Требуется файл в формате JSON"}, status=400)
 
         try:
-            with zipfile.ZipFile(tmp_path, 'r') as zip_file:
-                # Ищем файл с данными
-                data_file = next((f for f in zip_file.namelist() if f.endswith('.json')), None)
-                
-                if not data_file:
-                    raise ValueError("Архив не содержит файла данных (.json)")
+            # Читаем и проверяем данные
+            file_content = uploaded_file.read().decode('utf-8')
+            data = json.loads(file_content)
+            
+            # Валидация структуры данных
+            if not isinstance(data, dict) or 'documents' not in data:
+                raise ValueError("Некорректный формат данных. Ожидается объект с полем 'documents'")
 
-                # Читаем и проверяем данные
-                with zip_file.open(data_file) as f:
-                    data = json.loads(f.read().decode('utf-8'))  # Теперь json определен
-                
-                # Валидация структуры данных
-                if not isinstance(data, dict) or 'documents' not in data:
-                    raise ValueError("Некорректный формат данных")
+            # Добавляем документы в MongoDB
+            added_ids = mongo_service.add_documents(data['documents'])
+            
+            return JsonResponse({
+                "status": "success",
+                "imported_files": len(added_ids)
+            })
 
-                # Добавляем документы в MongoDB
-                added_ids = mongo_service.add_documents(data['documents'])
-                
-                return JsonResponse({
-                    "status": "success",
-                    "imported_files": len(added_ids)
-                })
-
-        except zipfile.BadZipFile:
-            return JsonResponse({"error": "Некорректный ZIP-архив"}, status=400)
         except json.JSONDecodeError:
-            return JsonResponse({"error": "Ошибка в JSON-файле"}, status=400)
+            return JsonResponse({"error": "Ошибка в JSON-файле: некорректный формат"}, status=400)
         except ValueError as e:
             return JsonResponse({"error": str(e)}, status=400)
-        finally:
-            if os.path.exists(tmp_path):
-                os.unlink(tmp_path)
+        except UnicodeDecodeError:
+            return JsonResponse({"error": "Ошибка декодирования файла. Убедитесь, что файл в UTF-8"}, status=400)
                 
     except Exception as e:
         return JsonResponse({"error": f"Ошибка сервера: {str(e)}"}, status=500)

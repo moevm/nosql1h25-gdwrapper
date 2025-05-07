@@ -107,7 +107,6 @@ class MongoService:
         :param file_data: Словарь с данными о файле
         :return: ID добавленного документа (строка)
         """
-        # Добавляем метки времени
         file_data['createdAt'] = datetime.utcnow()
         file_data['updatedAt'] = datetime.utcnow()
         
@@ -123,7 +122,6 @@ class MongoService:
         if not files_data:
             return []
             
-        # Добавляем метки времени ко всем документам
         current_time = datetime.utcnow()
         for doc in files_data:
             doc['createdAt'] = current_time
