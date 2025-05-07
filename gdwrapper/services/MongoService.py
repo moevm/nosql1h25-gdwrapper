@@ -107,8 +107,6 @@ class MongoService:
         :param file_data: Словарь с данными о файле
         :return: ID добавленного документа (строка)
         """
-        file_data['createdAt'] = datetime.utcnow()
-        file_data['updatedAt'] = datetime.utcnow()
         
         result = self.col.insert_one(file_data)
         return str(result.inserted_id)
@@ -121,11 +119,6 @@ class MongoService:
         """
         if not files_data:
             return []
-            
-        current_time = datetime.utcnow()
-        for doc in files_data:
-            doc['createdAt'] = current_time
-            doc['updatedAt'] = current_time
             
         result = self.col.insert_many(files_data)
         return [str(id) for id in result.inserted_ids]
