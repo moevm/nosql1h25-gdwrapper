@@ -9,5 +9,7 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
     path('auth/', include('auth.urls')),
     path('stats/', views.stats, name='stats'),
-    path('', views.index, name='index')
+    path('', views.index, name='index'),
+    path('import_data/', views.import_data, name='import_data'),
+    path('export_data/', views.export_data, name='export_data'),
 ]

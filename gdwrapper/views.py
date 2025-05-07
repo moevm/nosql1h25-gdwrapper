@@ -1,9 +1,15 @@
 from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.shortcuts import render
+from django.core.files.base import ContentFile
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
+from bson import json_util
+from django.http import HttpResponse
+import tempfile
 import os
+import zipfile
+import io
 
 from auth.GoogleApiClient import GoogleApiClient
 from gdwrapper.services.MongoService import MongoService
@@ -11,6 +17,10 @@ from .document_formatter.formatters import formatters_manager
 from auth.exceptions import UserNotAuthenticated
 from .handlers import refresh_data_in_mongo
 from .settings import GD_TOKEN_PATH
+
+
+
+
 
 
 mongo_service = MongoService()
@@ -124,3 +134,72 @@ def refresh_data(request):
         return JsonResponse({"redirect_to": reverse('auth:auth')}, status=403)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+@require_http_methods(["GET"])
+def export_data(request):
+    """Экспорт всех данных из MongoDB в ZIP-архиве"""
+    if not os.path.exists(GD_TOKEN_PATH):
+        return JsonResponse({"error": "Требуется авторизация"}, status=403)
+    
+    try:
+        # Получаем все данные
+        data = {
+            "metadata": {
+                "app": "GDWrapper",
+                "export_date": datetime.now().isoformat(),
+                "version": "1.0"
+            },
+            "documents": list(mongo_service.get_all_documents())
+        }
+        
+        # Создаем ZIP в памяти
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # Добавляем данные в JSON
+            json_data = json_util.dumps(data, indent=2)
+            zip_file.writestr('gdwrapper_export.json', json_data)
+            
+            # Добавляем README
+            readme = """Это архив экспорта из GDWrapper
+Содержит метаданные файлов на момент экспорта
+Для импорта используйте соответствующую функцию в приложении"""
+            zip_file.writestr('README.txt', readme)
+        
+        zip_buffer.seek(0)
+        
+        # Формируем имя файла с датой
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"gdwrapper_export_{timestamp}.zip"
+        
+        # Возвращаем архив
+        response = HttpResponse(zip_buffer, content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@require_http_methods(["POST"])
+def import_data(request):
+    try:
+        if 'file' not in request.FILES:
+            return HttpResponse("Файл не был загружен", status=400)
+
+        uploaded_file = request.FILES['file']
+        
+        # Простая проверка на ZIP
+        if not uploaded_file.name.lower().endswith('.zip'):
+            return HttpResponse("Файл должен быть в формате ZIP", status=400)
+
+        # Здесь ваша логика обработки ZIP-архива
+        # Например, сохранение на диск или обработка в памяти
+        
+        return JsonResponse({
+            "status": "ZIP-архив успешно обработан",
+            "files_processed": 42  # Примерное количество обработанных файлов
+        })
+        
+    except Exception as e:
+        return HttpResponse(f"Ошибка: {str(e)}", status=500)

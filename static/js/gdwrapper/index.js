@@ -65,80 +65,105 @@ function exportData() {
     }, 500);
 }
 
-function importData() {
+async function importData() {
     const fileInput = document.getElementById('importFile');
     const errorDiv = document.getElementById('importError');
     const importBtn = document.getElementById('importBtn');
     const spinner = document.getElementById('importSpinner');
-    
+    const importModal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
+
+    // Сброс состояния
     errorDiv.classList.add('d-none');
     errorDiv.textContent = '';
-    
-    if (!fileInput.files.length) {
-        errorDiv.textContent = 'Пожалуйста, выберите ZIP-архив';
-        errorDiv.classList.remove('d-none');
-        return;
-    }
-    
-    const fileName = fileInput.files[0].name.toLowerCase();
-    if (!fileName.endsWith('.zip')) {
-        errorDiv.textContent = 'Файл должен быть в формате ZIP';
-        errorDiv.classList.remove('d-none');
-        return;
-    }
-
-    importBtn.classList.add('d-none');
+    importBtn.disabled = true;
     spinner.classList.remove('d-none');
-    
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-    
 
-    fetch("{% url 'import_data' %}", {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
+    try {
+        // 1. Проверка файла
+        if (!fileInput.files || fileInput.files.length === 0) {
+            throw new Error('Выберите файл для импорта');
+        }
+
+        const file = fileInput.files[0];
+        if (!file.name.toLowerCase().endsWith('.zip')) {
+            throw new Error('Требуется файл в формате ZIP');
+        }
+
+        // 2. Подготовка данных
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+        // 3. Отправка запроса с таймаутом
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 секунд таймаут
+
+        const response = await fetch("/import_data/", {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        clearTimeout(timeoutId);
+
+        // 4. Обработка ответа
         if (!response.ok) {
-            return response.json().then(err => Promise.reject(err));
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
         }
-        return response.json();
-    })
-    .then(data => {
-        if (data.error) {
-            throw new Error(data.error);
-        }
+
+        const data = await response.json();
         
-        $('#importModal').modal('hide');
+        // 5. Успешный импорт
+        importModal.hide();
+        showToast('Данные успешно импортированы', 'success');
         
-        const toast = $(`
-            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header bg-success text-white">
-                        <strong class="me-auto">Импорт завершен</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">
-                        Успешно импортировано ${data.count} файлов
-                    </div>
-                </div>
-            </div>
-        `);
-        
-        $('body').append(toast);
-        
+        // 6. Принудительное обновление страницы
         setTimeout(() => {
-            location.reload();
-        }, 2000);
-    })
-    .catch(error => {
+            window.location.href = "";
+        }, 1500);
+
+    } catch (error) {
         console.error('Import error:', error);
-        errorDiv.textContent = error.message || 'Произошла ошибка при импорте';
-        errorDiv.classList.remove('d-none');
-    })
-    .finally(() => {
-        importBtn.classList.remove('d-none');
+        
+        // Специальная обработка разных типов ошибок
+        let errorMessage = 'Ошибка при импорте данных';
+        
+        if (error.name === 'AbortError') {
+            errorMessage = 'Превышено время ожидания сервера';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Ошибка соединения с сервером';
+        } else {
+            errorMessage = error.message || error.toString();
+        }
+
+        showError(errorMessage);
+    } finally {
+        importBtn.disabled = false;
         spinner.classList.add('d-none');
-    });
+    }
+}
+
+// Вспомогательные функции
+function showError(message) {
+    const errorDiv = document.getElementById('importError');
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('d-none');
+    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast show position-fixed bottom-0 end-0 m-3 text-white bg-${type}`;
+    toast.style.zIndex = '1100';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
 }
