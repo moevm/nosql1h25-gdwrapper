@@ -40,27 +40,35 @@ function setAllFilesCheckboxes(v){
 }
 
 function exportData() {
-    $('#exportModal').modal('hide');
+    // Получаем модальное окно без jQuery
+    const exportModal = document.getElementById('exportModal');
+    const modalInstance = bootstrap.Modal.getInstance(exportModal);
     
-    const toast = $(`
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <strong class="me-auto">Экспорт данных</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                </div>
-                <div class="toast-body">
-                    <div class="spinner-border spinner-border-sm me-2"></div>
-                    Подготовка архива...
-                </div>
+    // Закрываем модальное окно
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+
+    // Показываем уведомление
+    const toast = document.createElement('div');
+    toast.className = 'position-fixed bottom-0 end-0 p-3';
+    toast.innerHTML = `
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Экспорт данных</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body">
+                <div class="spinner-border spinner-border-sm me-2"></div>
+                Подготовка архива...
             </div>
         </div>
-    `);
+    `;
     
-    $('body').append(toast);
-    
+    document.body.appendChild(toast);
+
     setTimeout(() => {
-        window.location.href = "{% url 'export_data' %}";
+        window.location.href = "export_data";
         toast.remove();
     }, 500);
 }

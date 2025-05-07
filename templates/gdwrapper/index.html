@@ -165,7 +165,7 @@
 
 {# ---------------- ТАБЛИЦА ---------------- #}
 
-{% if not documents %}
+{% if not documents and not is_authenticated %}
     <div class="row justify-content-center align-items-center">
         <div class="col-auto mt-5 text-center">
             <i class="fa-regular fa-face-sad-tear sad-face-icon"></i>
