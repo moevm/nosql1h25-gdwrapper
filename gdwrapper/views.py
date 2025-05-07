@@ -149,14 +149,11 @@ def export_data(request):
         if not os.path.exists(GD_TOKEN_PATH):
             return JsonResponse({"error": "Требуется авторизация"}, status=403)
         
-        # Получаем данные из MongoDB
         documents = list(mongo_service.get_all_documents())
         
-        # Формируем имя файла
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"gdwrapper_export_{timestamp}.json"
         
-        # Конвертируем в JSON с поддержкой ObjectId и дат
         json_data = json_util.dumps({
             "metadata": {
                 "export_date": datetime.now().isoformat(),
@@ -179,7 +176,6 @@ def export_data(request):
 def import_data(request):
     """Обработчик импорта JSON файла"""
     try:
-        # Проверка авторизации (если нужно)
         if os.path.exists(GD_TOKEN_PATH):
             return JsonResponse({"error": "Импорт доступен только без авторизации"}, status=403)
 
@@ -189,20 +185,16 @@ def import_data(request):
         uploaded_file = request.FILES['file']
         mongo_service = MongoService()
 
-        # Проверка расширения файла
         if not uploaded_file.name.lower().endswith('.json'):
             return JsonResponse({"error": "Требуется файл в формате JSON"}, status=400)
 
         try:
-            # Читаем и проверяем данные
             file_content = uploaded_file.read().decode('utf-8')
             data = json.loads(file_content)
             
-            # Валидация структуры данных
             if not isinstance(data, dict) or 'documents' not in data:
                 raise ValueError("Некорректный формат данных. Ожидается объект с полем 'documents'")
 
-            # Добавляем документы в MongoDB
             added_ids = mongo_service.add_documents(data['documents'])
             
             return JsonResponse({

@@ -40,7 +40,6 @@ function setAllFilesCheckboxes(v){
 }
 
 function exportData() {
-    // Показываем уведомление о начале экспорта
     const toast = document.createElement('div');
     toast.className = 'position-fixed bottom-0 end-0 p-3';
     toast.innerHTML = `
@@ -56,14 +55,12 @@ function exportData() {
     `;
     document.body.appendChild(toast);
     
-    // Создаем скрытую ссылку для скачивания
     const link = document.createElement('a');
     link.href = "export_data";
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();
     
-    // Удаляем элементы через 3 секунды
     setTimeout(() => {
         toast.remove();
         link.remove();
@@ -77,14 +74,12 @@ async function importData() {
     const spinner = document.getElementById('importSpinner');
     const importModal = bootstrap.Modal.getInstance(document.getElementById('importModal'));
 
-    // Сброс состояния
     errorDiv.classList.add('d-none');
     errorDiv.textContent = '';
     importBtn.disabled = true;
     spinner.classList.remove('d-none');
 
     try {
-        // 1. Проверка файла
         if (!fileInput.files || fileInput.files.length === 0) {
             throw new Error('Выберите файл для импорта');
         }
@@ -94,12 +89,10 @@ async function importData() {
             throw new Error('Требуется файл в формате JSON');
         }
 
-        // 2. Подготовка данных
         const formData = new FormData();
         formData.append('file', file);
         formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
-        // 3. Отправка запроса с таймаутом
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 секунд таймаут
 
@@ -113,7 +106,6 @@ async function importData() {
         });
         clearTimeout(timeoutId);
 
-        // 4. Обработка ответа
         if (!response.ok) {
             const errorData = await response.json().catch(() => null);
             throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
@@ -121,11 +113,9 @@ async function importData() {
 
         const data = await response.json();
         
-        // 5. Успешный импорт
         importModal.hide();
         showToast('Данные успешно импортированы', 'success');
         
-        // 6. Принудительное обновление страницы
         setTimeout(() => {
             window.location.href = "";
         }, 1500);
@@ -133,7 +123,6 @@ async function importData() {
     } catch (error) {
         console.error('Import error:', error);
         
-        // Специальная обработка разных типов ошибок
         let errorMessage = 'Ошибка при импорте данных';
         
         if (error.name === 'AbortError') {
@@ -151,7 +140,6 @@ async function importData() {
     }
 }
 
-// Вспомогательные функции
 function showError(message) {
     const errorDiv = document.getElementById('importError');
     errorDiv.textContent = message;
