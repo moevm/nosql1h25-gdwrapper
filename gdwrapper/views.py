@@ -6,10 +6,13 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from bson import json_util
 from django.http import HttpResponse
+from datetime import datetime
+
 import tempfile
 import os
 import zipfile
 import io
+import json
 
 from auth.GoogleApiClient import GoogleApiClient
 from gdwrapper.services.MongoService import MongoService
@@ -52,6 +55,7 @@ MIME_GROUPS = {
 
 @ensure_csrf_cookie
 def index(request):
+
     mime_group = _clean(request.GET.get("mime_group"))
     name = _clean(request.GET.get("name"))
     owner_email = _clean(request.GET.get("owner_email"))
@@ -91,9 +95,12 @@ def index(request):
     else:
         documents = mongo_service.get_all_documents()
 
+    
     for doc in documents:
-        doc["id"] = str(doc.get("_id", ""))
-        formatters_manager.apply_formatters(doc)
+        if id not in doc:
+            doc['id'] = 1
+        if "modifiedTime" not in doc:
+            doc["modifiedTime "] = 1
     
     is_authenticated = False
     if os.path.exists(GD_TOKEN_PATH): is_authenticated = True
@@ -181,25 +188,58 @@ def export_data(request):
 
 
 @require_http_methods(["POST"])
-@require_http_methods(["POST"])
 def import_data(request):
+    """Обработчик импорта ZIP-архива с файлами"""
     try:
+        # Проверка авторизации (если нужно)
+        if os.path.exists(GD_TOKEN_PATH):
+            return JsonResponse({"error": "Импорт доступен только без авторизации"}, status=403)
+
         if 'file' not in request.FILES:
-            return HttpResponse("Файл не был загружен", status=400)
+            return JsonResponse({"error": "Файл не был загружен"}, status=400)
 
         uploaded_file = request.FILES['file']
-        
-        # Простая проверка на ZIP
-        if not uploaded_file.name.lower().endswith('.zip'):
-            return HttpResponse("Файл должен быть в формате ZIP", status=400)
+        mongo_service = MongoService()
 
-        # Здесь ваша логика обработки ZIP-архива
-        # Например, сохранение на диск или обработка в памяти
-        
-        return JsonResponse({
-            "status": "ZIP-архив успешно обработан",
-            "files_processed": 42  # Примерное количество обработанных файлов
-        })
-        
+        # Временный файл для архива
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            for chunk in uploaded_file.chunks():
+                tmp_file.write(chunk)
+            tmp_path = tmp_file.name
+
+        try:
+            with zipfile.ZipFile(tmp_path, 'r') as zip_file:
+                # Ищем файл с данными
+                data_file = next((f for f in zip_file.namelist() if f.endswith('.json')), None)
+                
+                if not data_file:
+                    raise ValueError("Архив не содержит файла данных (.json)")
+
+                # Читаем и проверяем данные
+                with zip_file.open(data_file) as f:
+                    data = json.loads(f.read().decode('utf-8'))  # Теперь json определен
+                
+                # Валидация структуры данных
+                if not isinstance(data, dict) or 'documents' not in data:
+                    raise ValueError("Некорректный формат данных")
+
+                # Добавляем документы в MongoDB
+                added_ids = mongo_service.add_documents(data['documents'])
+                
+                return JsonResponse({
+                    "status": "success",
+                    "imported_files": len(added_ids)
+                })
+
+        except zipfile.BadZipFile:
+            return JsonResponse({"error": "Некорректный ZIP-архив"}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Ошибка в JSON-файле"}, status=400)
+        except ValueError as e:
+            return JsonResponse({"error": str(e)}, status=400)
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+                
     except Exception as e:
-        return HttpResponse(f"Ошибка: {str(e)}", status=500)
+        return JsonResponse({"error": f"Ошибка сервера: {str(e)}"}, status=500)

@@ -165,7 +165,7 @@
 
 {# ---------------- ТАБЛИЦА ---------------- #}
 
-{% if not is_authenticated %}
+{% if not documents %}
     <div class="row justify-content-center align-items-center">
         <div class="col-auto mt-5 text-center">
             <i class="fa-regular fa-face-sad-tear sad-face-icon"></i>
@@ -196,7 +196,6 @@
                             <td>{{ document.size }}</td>
                             <td>{{ document.modifiedTime }}</td>
                             <td><button document_id="{{ document.id }}" onclick='showMoreInfo(this)' class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
-                            {{ document | json_script:document.id  }}
                         </tr>
                     {% endfor %}
                 </tbody>
