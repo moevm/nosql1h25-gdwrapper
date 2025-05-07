@@ -51,3 +51,21 @@
         justify-content: space-between;
     }
 }
+
+.btn-info, .btn-warning {
+    color: white;
+}
+
+#importSpinner {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinner-border {
+    animation: spin 0.75s linear infinite;
+}

@@ -98,6 +98,69 @@
     <button class="btn btn-success">Скачать выбранные</button>
     <button class="btn btn-primary">Загрузить файлы</button>
   </div>
+  {% if is_authenticated %}
+    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exportModal">
+      <i class="fas fa-file-export"></i> Экспорт данных
+    </button>
+  {% else %}
+    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">
+      <i class="fas fa-file-import"></i> Импорт данных
+    </button>
+  {% endif %}
+</div>
+
+<!-- Модальное окно экспорта -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Экспорт данных</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Будет создан ZIP-архив со всеми метаданными файлов из базы данных.</p>
+        <p class="text-muted small">
+          <i class="fas fa-info-circle"></i> Архив будет содержать:
+          <ul class="small">
+            <li>data.json - все метаданные файлов</li>
+            <li>README.txt - описание архива</li>
+          </ul>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" onclick="exportData()">
+          <i class="fas fa-file-archive"></i> Создать архив
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно импорта -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Импорт данных</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> Выберите ZIP-архив, полученный при экспорте данных
+        </div>
+        <input type="file" id="importFile" class="form-control" accept=".zip">
+        <div id="importError" class="alert alert-danger mt-2 d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" onclick="importData()" id="importBtn">
+          <i class="fas fa-file-import"></i> Импортировать
+        </button>
+        <div class="spinner-border text-primary d-none" id="importSpinner"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 {# ---------------- ТАБЛИЦА ---------------- #}
