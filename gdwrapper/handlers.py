@@ -1,13 +1,16 @@
-from auth.GoogleApiClient import GoogleApiClient
+from auth_google.GoogleApiClient import GoogleApiClient
 from gdwrapper.services.MongoService import MongoService
 
+
 def refresh_data_in_mongo():
+    mongo_service = MongoService()
     client = GoogleApiClient()
     files = client.getAllFiles()
+    print(f"get {len(files)}")
     documents = []
     for f in files:
         doc = {
-            "_id": f["id"],
+            "id": f["id"],
             "name": f.get("name"),
             "mimeType": f.get("mimeType"),
             "size": float(f.get("size", 0)),
@@ -15,7 +18,8 @@ def refresh_data_in_mongo():
             "modifiedTime": f.get("modifiedTime"),
             "ownerEmail": None,
             "capabilities": {},
-            "permissions": []
+            "permissions": [],
+            "parent": f.get("parents")[0] if f.get("parents") else None
         }
         if "owners" in f and len(f["owners"]) > 0:
             doc["ownerEmail"] = f["owners"][0].get("emailAddress")
@@ -48,5 +52,5 @@ def refresh_data_in_mongo():
             })
         doc["permissions"] = doc_perms
         documents.append(doc)
-        mongo_service = MongoService()
-        mongo_service.refresh_documents(documents)
+    mongo_service.refresh_documents(documents)
+    print(f"put all data in mongo")

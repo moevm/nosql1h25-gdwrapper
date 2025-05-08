@@ -4,10 +4,78 @@
     border-radius: 5px;
     margin-bottom: 20px;
 }
-.file-table {
+
+/* .file-table {
     background-color: white;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0,0,0,0.05);
+} */
+
+/* TreeView Styles */
+
+.file-tree-container {
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    padding: 20px;
+}
+
+.tree-view {
+    list-style: none;
+    padding-left: 0;
+}
+.tree-view ul {
+    list-style: none;
+    padding-left: 25px;
+}
+.tree-item {
+    padding: 8px 5px;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+}
+.tree-item:hover {
+    background-color: rgba(0,0,0,0.03);
+}
+.tree-toggle {
+    cursor: pointer;
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+    color: #6c757d;
+}
+.tree-icon {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+.folder-icon {
+    color: #ffc107;
+}
+.file-icon {
+    color: #4a6baf;
+}
+.tree-label {
+    flex-grow: 1;
+}
+.tree-badge {
+    font-size: 0.8em;
+    margin-left: 10px;
+    background-color: #f8f9fa;
+    padding: 3px 8px;
+    border-radius: 10px;
+}
+.tree-collapse {
+    display: none;
+}
+.tree-collapse.show {
+    display: block;
+}
+
+.form-check-input{
+    margin-top: 0;
+    margin-right: 10px;
+    width: 15px;
 }
 
 .action-buttons {

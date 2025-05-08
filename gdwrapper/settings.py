@@ -74,6 +74,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'macros',
+    'auth_google'
 ]
 
 STATIC_URL = '/static/'
@@ -105,6 +107,10 @@ TEMPLATES = [
             ],
         },
     },
+    #     {
+    #     'BACKEND': 'django.template.backends.jinja2.Jinja2',
+    #     'DIRS': [BASE_DIR / '../templates'],
+    # },
 ]
 
 WSGI_APPLICATION = 'gdwrapper.wsgi.application'
