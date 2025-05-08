@@ -194,7 +194,8 @@
                             <td>{{ document.size }}</td>
                             <td>{{ document.modifiedTime }}</td>
                             <td><button document_id="{{ document.id }}" onclick='showMoreInfo(this)' class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
-                        </tr>
+                            {{ document | json_script:document.id  }}
+                          </td></tr>
                     {% endfor %}
                 </tbody>
             </table>

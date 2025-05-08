@@ -1,14 +1,15 @@
 function showMoreInfo(btn){
-  const data = JSON.parse(document.getElementById(btn.getAttribute('document_id')).textContent);
-  document.getElementById('detailFileName').textContent   = data.name;
-  document.getElementById('detailFileType').textContent   = data.mimeType;
-  document.getElementById('detailFileSize').textContent   = data.size;
-  document.getElementById('detailFileCreated').textContent  = data.createdTime;
-  document.getElementById('detailFileModified').textContent = data.modifiedTime;
-  document.getElementById('detailFileOwner').textContent     = data.ownerEmail;
-  document.getElementById('detailFilePermissions').textContent =
-      JSON.stringify(data.capabilities, null, 2);
-}
+    const data = JSON.parse(document.getElementById(btn.getAttribute('document_id')).textContent);
+    document.getElementById('detailFileName').textContent   = data.name;
+    document.getElementById('detailFileType').textContent   = data.mimeType;
+    document.getElementById('detailFileSize').textContent   = data.size;
+    document.getElementById('detailFileCreated').textContent  = data.createdTime;
+    document.getElementById('detailFileModified').textContent = data.modifiedTime;
+    document.getElementById('detailFileOwner').textContent     = data.ownerEmail;
+    document.getElementById('detailFilePermissions').textContent =
+        JSON.stringify(data.capabilities, null, 2);
+  }
+  
 
 function refreshData(event) {
     event.preventDefault();
@@ -92,6 +93,8 @@ async function importData() {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+
+        console.log(formData);
 
         const response = await fetch("/import_data/", {
             method: 'POST',
