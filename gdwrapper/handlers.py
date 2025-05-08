@@ -7,6 +7,7 @@ def refresh_data_in_mongo():
     documents = []
     for f in files:
         doc = {
+            "id": f["id"],
             "_id": f["id"],
             "name": f.get("name"),
             "mimeType": f.get("mimeType"),

@@ -99,7 +99,7 @@ def index(request):
     
     for doc in documents:
         if id not in doc:
-            doc['id'] = 1
+            doc['id'] = doc['_id']
         if "modifiedTime" not in doc:
             doc["modifiedTime "] = 1
     
@@ -126,6 +126,7 @@ def get_all_files(request):
     docs = mongo_service.get_all_documents()
     for d in docs:
         d["_id"] = str(d["_id"])
+        d["id"] = str(d["_id"])
     return JsonResponse({"data": docs})
 
 
