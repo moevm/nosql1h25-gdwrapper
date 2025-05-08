@@ -22,17 +22,29 @@ function handleStatsFormSubmit(event) {
 function fetchStatsData(xAttr, yAttr) {
     fetch(`/stats/data?x=${xAttr}&y=${yAttr}`)
         .then((response) => response.json())
-        .then((json) => {
-            renderStatsChart(json.data, xAttr, yAttr);
+        .then(({ type, data }) => {
+            switch (type) {
+                case "bar":
+                    renderBarChart(data, xAttr, yAttr);
+                    break;
+                case "table":
+                    renderStatsTable(data, xAttr, yAttr);
+                    break;
+                case "graph":
+                    renderGraph(data, xAttr, yAttr);
+                    break;
+                default:
+                    alert("Невозможно построить график для выбранных параметров.");
+            }
         })
         .catch((error) => {
-            console.error("Ошибка при получении данных статистики:", error);
+            console.error("Ошибка при получении статистики:", error);
         });
 }
 
 let chartInstance = null;
 
-function renderStatsChart(data, xAttr, yAttr) {
+function renderBarChart(data, xAttr, yAttr) {
     const labels = data.map((item) => item.x);
     const values = data.map((item) => item.y);
 
@@ -61,6 +73,7 @@ function renderStatsChart(data, xAttr, yAttr) {
             plugins: {
                 legend: {
                     position: 'top',
+                    display: 'true'
                 },
                 tooltip: {
                     mode: 'index',
