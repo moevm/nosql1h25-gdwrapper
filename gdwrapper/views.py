@@ -99,9 +99,10 @@ def index(request):
     
     for doc in documents:
         if id not in doc:
-            doc['id'] = doc['_id']
+            doc["id"] = str(doc.get("_id", ""))
         if "modifiedTime" not in doc:
             doc["modifiedTime "] = 1
+        formatters_manager.apply_formatters(doc)
     
     is_authenticated = False
     if os.path.exists(GD_TOKEN_PATH): is_authenticated = True
