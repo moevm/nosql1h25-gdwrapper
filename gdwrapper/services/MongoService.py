@@ -15,10 +15,11 @@ class MongoService:
         coll_name = getattr(settings, "COLL_NAME",
                             os.getenv("MONGO_COLLECTION", "documents"))
 
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
         self.col = (
-            MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
-            [db_name][coll_name]
+            client[db_name][coll_name]
         )
+        self.comments = client[db_name]['comments']
 
     @staticmethod
     def _to_float(v: Union[str, float, None]) -> Optional[float]:
@@ -35,9 +36,23 @@ class MongoService:
             return date_str
         suffix = "T23:59:59Z" if end else "T00:00:00Z"
         return f"{date_str}{suffix}"
+    
+    def get_comment(self, document_google_id: str):
+        return self.comments.find_one({'document_google_id': document_google_id})
+
+    def create_or_update_comment(self, comment_text: str, document_google_id: str):
+        query = {"document_google_id": document_google_id}
+        new_values = {"$set": { "text": comment_text }, '$setOnInsert': query}
+        self.comments.find_one_and_update(query, new_values, upsert=True)
 
     def get_all_documents(self) -> List[Dict]:
         return list(self.col.find({}))
+    
+    def get_document(self, id: str) -> Dict:
+        return self.col.find_one({'id': id})
+    
+    def find(self, filter: dict) -> list:
+        return self.col.find(filter)
 
     def get_documents(
             self,

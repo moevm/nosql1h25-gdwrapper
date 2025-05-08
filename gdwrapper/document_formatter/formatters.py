@@ -11,11 +11,6 @@ def createdAndModifiedTimeFormatter(document):
 
 
 @formatters_manager.register_formatter()
-def idFormatter(document):
-    document["id"] = document["_id"]
-
-
-@formatters_manager.register_formatter()
 def sizeFormatter(document):
     suffix = "Б"
     num = document["size"]

@@ -74,9 +74,37 @@ class GoogleApiClient:
         Returns:
             List[dict]: List of files data
         """
-        results = (
-            self.__service.files()
-            .list(fields='files({})'.format(', '.join(GD_FIELDS)))
-            .execute()
-        )
-        return results.get("files", [])
+        all_files = []
+        page_token = None
+        
+        while True:
+            try:
+                results = (
+                    self.__service.files()
+                    .list(
+                        fields=f"files({', '.join(GD_FIELDS)}), nextPageToken",
+                        pageToken=page_token,
+                        pageSize=1000
+                    )
+                    .execute()
+                )
+                
+                all_files.extend(results.get("files", []))
+                page_token = results.get('nextPageToken')
+                
+                if not page_token:
+                    break
+                    
+            except Exception as e:
+                print(f"Error fetching files: {e}")
+                break
+        
+        return all_files
+    
+    def getRootFolderID(self) -> str:
+        """Make request to Google Drive API to get root folder id.
+
+        Returns:
+            str: root folder id
+        """
+        return self.__service.files().get(fileId='root', fields="id").execute()['id']

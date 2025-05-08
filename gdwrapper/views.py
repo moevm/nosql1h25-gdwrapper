@@ -5,12 +5,16 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 import os
 
-from auth.GoogleApiClient import GoogleApiClient
+from auth_google.GoogleApiClient import GoogleApiClient
 from gdwrapper.services.MongoService import MongoService
 from .document_formatter.formatters import formatters_manager
-from auth.exceptions import UserNotAuthenticated
+from auth_google.exceptions import UserNotAuthenticated
 from .handlers import refresh_data_in_mongo
 from .settings import GD_TOKEN_PATH
+from auth_google.GoogleApiClient import GoogleApiClient
+from .imdict import imdict
+from copy import deepcopy
+import json
 
 
 mongo_service = MongoService()
@@ -80,16 +84,46 @@ def index(request):
         )
     else:
         documents = mongo_service.get_all_documents()
-
-    for doc in documents:
-        doc["id"] = str(doc.get("_id", ""))
-        formatters_manager.apply_formatters(doc)
     
     is_authenticated = False
     if os.path.exists(GD_TOKEN_PATH): is_authenticated = True
-    
+    try:
+        root_dir_id = GoogleApiClient().getRootFolderID()
+    except UserNotAuthenticated:
+        return render(request, "gdwrapper/index.html", {
+            "tree": {},
+            "parent": None,
+            "filters": request.GET,
+            'is_authenticated': False,
+        })
+    tree = {}
+    for doc in documents:
+        comment = mongo_service.get_comment(doc['id'])
+        if comment is not None:
+            doc['comment'] = comment['text']
+        doc['_id'] = str(doc['_id'])
+        formatters_manager.apply_formatters(doc)
+        if doc['parent'] == None:
+            tree.setdefault(root_dir_id, set([])).add(imdict(doc))
+        else: tree.setdefault(doc['parent'], set([])).add(imdict(doc))
+        current_doc = deepcopy(doc)
+        while current_doc['parent'] is not None and current_doc['parent'] != root_dir_id:
+            parent_doc = mongo_service.get_document(current_doc['parent'])
+            if parent_doc is None:
+                break
+            parent_doc['_id'] = str(parent_doc['_id'])
+            formatters_manager.apply_formatters(parent_doc)
+            comment = mongo_service.get_comment(parent_doc['id'])
+            if comment is not None:
+                parent_doc['comment'] = comment['text']
+            tree.setdefault(parent_doc['parent'], set([])).add(imdict(parent_doc))
+            current_doc = deepcopy(parent_doc)
+        if doc['mimeType'] == 'application/vnd.google-apps.folder':
+            documents.extend(mongo_service.find({'parent': doc['id']}))
+            
     return render(request, "gdwrapper/index.html", {
-        "documents": documents,
+        "tree": tree,
+        "parent": root_dir_id,
         "filters": request.GET,
         'is_authenticated': is_authenticated,
     })
@@ -124,3 +158,9 @@ def refresh_data(request):
         return JsonResponse({"redirect_to": reverse('auth:auth')}, status=403)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+
+@require_http_methods(["POST"])
+def create_or_update_comment(request):
+    mongo_service.create_or_update_comment(**json.loads(request.body.decode("utf-8")))
+    return JsonResponse({"status": "Comment created successfully"})

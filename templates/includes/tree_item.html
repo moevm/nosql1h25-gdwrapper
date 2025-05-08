@@ -1,0 +1,19 @@
+<div class="tree-item">
+      <input type="checkbox" class="form-check-input" onclick="toggleCheckInput(event)">
+    {% if document.mimeType == 'application/vnd.google-apps.folder' %}
+      <span class="tree-toggle" onclick="toggleTreeItem(this)">
+        <i class="fas fa-caret-right"></i>
+      </span>
+      <span class="tree-icon folder-icon">
+        <i class="fas fa-folder"></i>
+    </span>
+    {% else %}
+      <span class="tree-icon file-icon">
+        <i class="fas fa-file"></i>
+      </span>
+    {% endif %}
+    <span class="tree-label">{{ document.name }}</span>
+    <span class="tree-badge">{{ document.size }}</span>
+    <button document_id="{{ document.id }}" onclick='showMoreInfo(this)' class="btn btn-sm btn-outline-info ms-2" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button>
+    {{ document | json_script:document.id  }}
+</div>

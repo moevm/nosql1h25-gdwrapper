@@ -1,0 +1,13 @@
+{% load tree_filters %}
+{% load macros %}
+
+{% macro render_tree tree parent_id %}
+  <ul class="tree-collapse">
+  {% for document in tree|get_items:parent_id %}
+    <li>
+        {% include 'includes/tree_item.html' %}
+        {% recurse_macro render_tree tree document.id %}
+    </li>
+  {% endfor %}
+  </ul>
+{% endmacro %}
