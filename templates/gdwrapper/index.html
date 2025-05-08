@@ -14,7 +14,27 @@
 {# ---------------- ФИЛЬТРЫ ---------------- #}
 <form method="get" class="filter-bar mb-4">
   <div class="row g-3">
+    {# ------ СОРТИРОВКА ------ #}
+    <div class="col-md-3">
+      <label for="sort_field" class="form-label">Сортировать по</label>
+      <select id="sort_field" name="sort_field" class="form-select">
+        <option value=""            {% if not filters.sort_field %}selected{% endif %}>Нет</option>
+        <option value="name"        {% if filters.sort_field == 'name' %}selected{% endif %}>Имя файла</option>
+        <option value="ownerEmail"  {% if filters.sort_field == 'ownerEmail' %}selected{% endif %}>Владелец</option>
+          <option value="mimeType"    {% if filters.sort_field == 'mimeType' %}selected{% endif %}>Тип файла</option>
+        <option value="createdTime" {% if filters.sort_field == 'createdTime' %}selected{% endif %}>Дата создания</option>
+        <option value="modifiedTime"{% if filters.sort_field == 'modifiedTime' %}selected{% endif %}>Дата изменения</option>
+        <option value="size"        {% if filters.sort_field == 'size' %}selected{% endif %}>Размер</option>
+      </select>
+    </div>
 
+    <div class="col-md-3">
+      <label for="sort_order" class="form-label">Направление</label>
+      <select id="sort_order" name="sort_order" class="form-select">
+        <option value="asc"  {% if filters.sort_order == 'asc'  %}selected{% endif %}>По возрастанию</option>
+        <option value="desc" {% if filters.sort_order == 'desc' %}selected{% endif %}>По убыванию</option>
+      </select>
+    </div>
     <div class="col-md-3">
       <label for="mime_group" class="form-label">Тип файла</label>
       <select id="mime_group" name="mime_group" class="form-select">
@@ -43,16 +63,15 @@
     </div>
 
     <div class="col-md-3">
-      <label for="size_range" class="form-label">Размер файла</label>
-      <select id="size_range" name="size_range" class="form-select">
-         <option value=""        {% if not filters.size_range %}selected{% endif %}>Любой</option>
-         <option value="lt100"   {% if filters.size_range == 'lt100' %}selected{% endif %}>до 100 КБ</option>
-         <option value="100_500" {% if filters.size_range == '100_500' %}selected{% endif %}>100 – 500 КБ</option>
-         <option value="500_1m"  {% if filters.size_range == '500_1m' %}selected{% endif %}>500 КБ – 1 МБ</option>
-         <option value="1m_10m"  {% if filters.size_range == '1m_10m' %}selected{% endif %}>1 – 10 МБ</option>
-         <option value="10m_100m"  {% if filters.size_range == '1m_10m' %}selected{% endif %}>10 – 100 МБ</option>
-         <option value="gt100m"   {% if filters.size_range == 'gt10m' %}selected{% endif %}>более 100 МБ</option>
-      </select>
+      <label class="form-label">Размер файла, КБ (от / до)</label>
+      <div class="input-group">
+        <input id="size_from_kb" name="size_from_kb" type="number" step="1" min="0"
+               class="form-control"
+               placeholder="мин" value="{{ filters.size_from_kb|default_if_none:'' }}">
+        <input id="size_to_kb" name="size_to_kb" type="number" step="1" min="0"
+               class="form-control"
+               placeholder="макс" value="{{ filters.size_to_kb|default_if_none:'' }}">
+      </div>
     </div>
 
     <div class="col-md-3">
@@ -190,7 +209,7 @@
                         <tr>
                             <td><input type="checkbox" class="form-check-input"></td>
                             <td>{{ document.name }}</td>
-                            <td>{{ document.mimeType }}</td>
+                            <td>{{ document.typeLabel }}</td>
                             <td>{{ document.size }}</td>
                             <td>{{ document.modifiedTime }}</td>
                             <td><button document_id="{{ document.id }}" onclick='showMoreInfo(this)' class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
