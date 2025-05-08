@@ -26,6 +26,8 @@
                 <select class="form-control" id="x-select">
                     <option value="mimeType">Тип файла</option>
                     <option value="size">Размер файла</option>
+                    <option value="modifiedTime">Время изменения</option>
+                    <option value="ownerEmail">Автор</option>
                 </select>
             </div>
             <div class="col">
@@ -33,6 +35,8 @@
                 <select class="form-control" id="y-select">
                     <option value="size">Размер файла</option>
                     <option value="mimeType">Тип файла</option>
+                    <option value="modifiedTime">Время изменения</option>
+                    <option value="ownerEmail">Автор</option>
                 </select>
             </div>
             <div class="col d-flex align-items-end">
@@ -41,8 +45,9 @@
         </div>
     </form>
 
-    <div>
+    <div id="stats-container">
         <canvas id="stats-chart"></canvas>
+        <div id="stats-table"></div>
     </div>
 
     {% endif %}

@@ -45,6 +45,10 @@ function fetchStatsData(xAttr, yAttr) {
 let chartInstance = null;
 
 function renderBarChart(data, xAttr, yAttr) {
+    const tableDiv = document.getElementById("stats-table");
+    tableDiv.innerHTML = "";
+    document.getElementById("stats-chart").style.display = "block";
+
     const labels = data.map((item) => item.x);
     const values = data.map((item) => item.y);
 
@@ -87,4 +91,58 @@ function renderBarChart(data, xAttr, yAttr) {
             }
         }
     });
+}
+
+function renderStatsTable(data, xAttr, yAttr) {
+    const chart = document.getElementById("stats-chart");
+    chart.style.display = "none";
+    const container = document.getElementById("stats-table");
+    container.innerHTML = "";
+
+    // Соберем уникальные заголовки столбцов
+    const columnHeaders = new Set();
+    data.forEach(row => {
+        Object.keys(row.cols).forEach(col => columnHeaders.add(col));
+    });
+
+    const sortedColumns = Array.from(columnHeaders).sort();
+
+    const table = document.createElement("table");
+    table.classList.add("table", "table-striped", "table-bordered");
+
+    // Заголовок таблицы
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+
+    const cornerCell = document.createElement("th");
+    cornerCell.textContent = xAttr + " \\ " + yAttr;
+    headRow.appendChild(cornerCell);
+
+    sortedColumns.forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    // Тело таблицы
+    const tbody = document.createElement("tbody");
+    data.forEach(row => {
+        const tr = document.createElement("tr");
+        const rowHeader = document.createElement("th");
+        rowHeader.textContent = row.row;
+        tr.appendChild(rowHeader);
+
+        sortedColumns.forEach(col => {
+            const td = document.createElement("td");
+            td.textContent = row.cols[col] || 0;
+            tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    container.appendChild(table);
 }
