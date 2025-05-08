@@ -1,6 +1,7 @@
 import os
 import re
 from typing import Optional, Union, List, Dict
+from pymongo import ASCENDING, DESCENDING
 
 from django.conf import settings
 from pymongo import MongoClient
@@ -52,6 +53,8 @@ class MongoService:
             size_min: Union[str, float, None] = None,
             size_max: Union[str, float, None] = None,
             owner_email: Optional[str] = None,
+            sort_field: Optional[str] = None,
+            sort_order: Optional[str] = None,
     ) -> List[Dict]:
 
         q: Dict = {}
@@ -86,19 +89,30 @@ class MongoService:
             q["modifiedTime"] = modified_cond
 
         size_cond = {}
-        _min = self._to_float(size_min)
-        _max = self._to_float(size_max)
-        if _min is not None:
-            size_cond["$gte"] = _min
-        if _max is not None:
-            size_cond["$lte"] = _max
+        kb_min = self._to_float(size_min)
+        kb_max = self._to_float(size_max)
+
+        if kb_min is not None:
+            size_cond["$gte"] = kb_min * 1024
+
+        if kb_max is not None:
+            size_cond["$lte"] = kb_max * 1024
+
         if size_cond:
             q["size"] = size_cond
 
         if owner_email:
             q["ownerEmail"] = owner_email
 
-        return list(self.col.find(q))
+        cursor = self.col.find(q)
+
+        allowed = {"name", "mimeType", "ownerEmail", "createdTime", "modifiedTime", "size"}
+        if sort_field and sort_field in allowed:
+            direction = ASCENDING if sort_order == "asc" else DESCENDING
+            cursor = cursor.sort(sort_field, direction)
+
+        return list(cursor)
+
 
     def refresh_documents(self, docs: List[Dict]) -> None:
         self.col.delete_many({})
