@@ -1,13 +1,14 @@
 import os
 import re
 from typing import Optional, Union, List, Dict
-from pymongo import ASCENDING, DESCENDING
 
 from django.conf import settings
-from pymongo import MongoClient
+from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo.collation import Collation
 
 
 class MongoService:
+    CASE_INSENSITIVE_COLLATION = Collation(locale="en", strength=2)
     def __init__(self) -> None:
         mongo_uri = getattr(settings, "MONGO_URI",
                             os.getenv("MONGO_URI", "mongodb://mongo:27017"))
@@ -56,10 +57,8 @@ class MongoService:
             sort_field: Optional[str] = None,
             sort_order: Optional[str] = None,
     ) -> List[Dict]:
-
         q: Dict = {}
 
-        # MIME
         if mime_eq:
             q["mimeType"] = mime_eq
         elif mime_prefix:
@@ -68,7 +67,7 @@ class MongoService:
         if name:
             q["name"] = {"$regex": name, "$options": "i"}
 
-        created_cond = {}
+        created_cond: Dict = {}
         cf = self._iso_bound(created_from)
         ct = self._iso_bound(created_to, end=True)
         if cf:
@@ -78,7 +77,7 @@ class MongoService:
         if created_cond:
             q["createdTime"] = created_cond
 
-        modified_cond = {}
+        modified_cond: Dict = {}
         mf = self._iso_bound(modified_from)
         mt = self._iso_bound(modified_to, end=True)
         if mf:
@@ -88,31 +87,27 @@ class MongoService:
         if modified_cond:
             q["modifiedTime"] = modified_cond
 
-        size_cond = {}
+        size_cond: Dict = {}
         kb_min = self._to_float(size_min)
         kb_max = self._to_float(size_max)
-
         if kb_min is not None:
             size_cond["$gte"] = kb_min * 1024
-
         if kb_max is not None:
             size_cond["$lte"] = kb_max * 1024
-
         if size_cond:
             q["size"] = size_cond
 
         if owner_email:
             q["ownerEmail"] = owner_email
 
-        cursor = self.col.find(q)
+        cursor = self.col.find(q, collation=self.CASE_INSENSITIVE_COLLATION)
 
         allowed = {"name", "mimeType", "ownerEmail", "createdTime", "modifiedTime", "size"}
-        if sort_field and sort_field in allowed:
+        if sort_field in allowed:
             direction = ASCENDING if sort_order == "asc" else DESCENDING
             cursor = cursor.sort(sort_field, direction)
 
         return list(cursor)
-
 
     def refresh_documents(self, docs: List[Dict]) -> None:
         self.col.delete_many({})
