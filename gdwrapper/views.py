@@ -19,6 +19,7 @@ mongo_service = MongoService()
 def _clean(v):
     return v or None
 
+
 SIZE_PRESETS = {
     "lt100": (None, 100 * 1024 - 1),
     "100_500": (100 * 1024, 500 * 1024 - 1),
@@ -84,10 +85,11 @@ def index(request):
     for doc in documents:
         doc["id"] = str(doc.get("_id", ""))
         formatters_manager.apply_formatters(doc)
-    
+
     is_authenticated = False
-    if os.path.exists(GD_TOKEN_PATH): is_authenticated = True
-    
+    if os.path.exists(GD_TOKEN_PATH):
+        is_authenticated = True
+
     return render(request, "gdwrapper/index.html", {
         "documents": documents,
         "filters": request.GET,
@@ -97,7 +99,8 @@ def index(request):
 
 def stats(request):
     is_authenticated = False
-    if os.path.exists(GD_TOKEN_PATH): is_authenticated = True
+    if os.path.exists(GD_TOKEN_PATH):
+        is_authenticated = True
     return render(request, "gdwrapper/stats.html", {
         'is_authenticated': is_authenticated,
     })
@@ -124,3 +127,39 @@ def refresh_data(request):
         return JsonResponse({"redirect_to": reverse('auth:auth')}, status=403)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def get_stats_data(request):
+    x_attr = request.GET.get('x')
+    y_attr = request.GET.get('y')
+
+    if not x_attr or not y_attr or x_attr == y_attr:
+        return JsonResponse({'error': 'Invalid parameters'}, status=400)
+
+    try:
+        documents = mongo_service.get_all_documents()
+    except Exception as e:
+        return JsonResponse({'error': f'Ошибка при получении документов: {str(e)}'}, status=500)
+
+     # Группируем вручную по x_attr и суммируем y_attr
+    grouped_data = {}
+    for doc in documents:
+        x_value = doc.get(x_attr)
+        y_value = doc.get(y_attr)
+
+        # сейчас конкретнор решаю задачу тип данных - объем данных
+        if x_value is None:
+            continue
+        try:
+            y_value = float(y_value)
+        except (TypeError, ValueError):
+            continue
+
+        grouped_data.setdefault(x_value, []).append(y_value)
+
+    result = [
+        {"x": key, "y": sum(values)} for key, values in grouped_data.items()
+    ]
+
+    return JsonResponse({'data': result})

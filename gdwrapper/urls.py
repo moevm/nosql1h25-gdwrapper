@@ -9,5 +9,6 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
     path('auth/', include('auth.urls')),
     path('stats/', views.stats, name='stats'),
+    path('stats/data/', views.get_stats_data, name='get_stats_data'),
     path('', views.index, name='index')
 ]
