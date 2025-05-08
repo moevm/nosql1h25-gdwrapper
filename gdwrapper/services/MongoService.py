@@ -1,6 +1,7 @@
 import os
 import re
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List, Dict, Any
+from datetime import datetime
 
 from django.conf import settings
 from pymongo import ASCENDING, DESCENDING, MongoClient
@@ -108,6 +109,28 @@ class MongoService:
             cursor = cursor.sort(sort_field, direction)
 
         return list(cursor)
+    
+    def add_document(self, file_data: Dict[str, Any]) -> str:
+        """
+        Добавляет один файл в коллекцию
+        :param file_data: Словарь с данными о файле
+        :return: ID добавленного документа (строка)
+        """
+        
+        result = self.col.insert_one(file_data)
+        return str(result.inserted_id)
+
+    def add_documents(self, files_data: List[Dict[str, Any]]) -> List[str]:
+        """
+        Добавляет несколько файлов в коллекцию
+        :param files_data: Список словарей с данными о файлах
+        :return: Список ID добавленных документов (строки)
+        """
+        if not files_data:
+            return []
+            
+        result = self.col.insert_many(files_data)
+        return [str(id) for id in result.inserted_ids]
 
     def refresh_documents(self, docs: List[Dict]) -> None:
         self.col.delete_many({})
