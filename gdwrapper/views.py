@@ -126,7 +126,6 @@ def get_all_files(request):
     docs = mongo_service.get_all_documents()
     for d in docs:
         d["_id"] = str(d["_id"])
-        d["id"] = str(d["_id"])
     return JsonResponse({"data": docs})
 
 
