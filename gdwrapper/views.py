@@ -151,6 +151,14 @@ def determine_chart_type(x_attr, y_attr):
         return "error"
 
 
+def is_numeric(attr, sample_value):
+    if attr == "size":
+        return True
+    if attr == "modifiedTime":
+        return True
+    return isinstance(sample_value, (int, float))
+
+
 @require_http_methods(["GET"])
 def get_stats_data(request):
     x_attr = request.GET.get('x')
@@ -165,6 +173,13 @@ def get_stats_data(request):
     data = []
 
     if chart_type == "bar":
+        sample_doc = documents[0]
+        x_is_numeric = is_numeric(x_attr, sample_doc[x_attr])
+        y_is_numeric = is_numeric(y_attr, sample_doc[y_attr])
+
+        if x_is_numeric and not y_is_numeric:
+            x_attr, y_attr = y_attr, x_attr
+
         grouped_data = defaultdict(list)
         for doc in documents:
             key = doc.get(x_attr)
@@ -184,6 +199,9 @@ def get_stats_data(request):
         data = [{"row": r, "cols": dict(c)} for r, c in table.items()]
 
     elif chart_type == "graph":
+        if x_attr != "modifiedTime":
+            x_attr, y_attr = y_attr, x_attr
+
         grouped_data = defaultdict(list)
         for doc in documents:
             try:

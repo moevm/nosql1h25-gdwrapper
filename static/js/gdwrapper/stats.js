@@ -59,9 +59,11 @@ function renderBarChart(data, xAttr, yAttr) {
     }
 
     const isXAxisNumeric = typeof data[0]?.x === "number";
+    const isYAxisNumeric = typeof data[0]?.y === "number";
+    const useHorizontalBar = isXAxisNumeric && !isYAxisNumeric;
 
     chartInstance = new Chart(ctx, {
-        type: isXAxisNumeric ? "line" : "bar",
+        type: "bar",
         data: {
             labels: labels,
             datasets: [{
@@ -73,6 +75,7 @@ function renderBarChart(data, xAttr, yAttr) {
             }]
         },
         options: {
+            indexAxis: useHorizontalBar ? 'y' : 'x',
             responsive: true,
             plugins: {
                 legend: {
@@ -85,6 +88,9 @@ function renderBarChart(data, xAttr, yAttr) {
                 }
             },
             scales: {
+                x: {
+                    beginAtZero: true
+                },
                 y: {
                     beginAtZero: true
                 }
@@ -99,7 +105,6 @@ function renderStatsTable(data, xAttr, yAttr) {
     const container = document.getElementById("stats-table");
     container.innerHTML = "";
 
-    // Соберем уникальные заголовки столбцов
     const columnHeaders = new Set();
     data.forEach(row => {
         Object.keys(row.cols).forEach(col => columnHeaders.add(col));
@@ -110,7 +115,6 @@ function renderStatsTable(data, xAttr, yAttr) {
     const table = document.createElement("table");
     table.classList.add("table", "table-striped", "table-bordered");
 
-    // Заголовок таблицы
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
 
@@ -126,7 +130,6 @@ function renderStatsTable(data, xAttr, yAttr) {
     thead.appendChild(headRow);
     table.appendChild(thead);
 
-    // Тело таблицы
     const tbody = document.createElement("tbody");
     data.forEach(row => {
         const tr = document.createElement("tr");
@@ -145,4 +148,52 @@ function renderStatsTable(data, xAttr, yAttr) {
 
     table.appendChild(tbody);
     container.appendChild(table);
+}
+
+function renderGraph(data, xAttr, yAttr) {
+    const tableDiv = document.getElementById("stats-table");
+    tableDiv.innerHTML = "";
+    document.getElementById("stats-chart").style.display = "block";
+
+    const labels = data.map(item => item.x);
+    const values = data.map(item => item.y);
+
+    const ctx = document.getElementById("stats-chart").getContext("2d");
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: `${yAttr} по ${xAttr}`,
+                data: values,
+                backgroundColor: "rgba(75, 192, 192, 0.4)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        }
+    });
 }
