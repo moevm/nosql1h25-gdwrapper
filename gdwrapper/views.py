@@ -22,6 +22,7 @@ from gdwrapper.services.MongoService import MongoService
 from .document_formatter.formatters import formatters_manager
 from .handlers import refresh_data_in_mongo
 from .settings import GD_TOKEN_PATH
+from zoneinfo import ZoneInfo
 
 mongo_service = MongoService()
 
@@ -145,6 +146,7 @@ def index(request):
         "documents": documents,
         "filters": request.GET,
         "is_authenticated": is_authenticated,
+        "timezone": request.session.get('timezone', 'UTC'),
     })
 
 
@@ -187,7 +189,9 @@ def export_data(request):
         
         documents = list(mongo_service.get_all_documents())
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        timestamp = datetime.now(ZoneInfo(request.session.get('timezone', 'UTC'))).strftime("%Y%m%d_%H%M%S")
         filename = f"gdwrapper_export_{timestamp}.json"
         
         json_data = json_util.dumps({
@@ -293,3 +297,21 @@ def import_data(request):
             
     except Exception as e:
         return JsonResponse({"error": f"Непредвиденная ошибка: {str(e)}"}, status=500)
+
+
+def set_timezone(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            timezone = data.get('timezone')
+            if timezone:
+                # Сохраняем часовой пояс в сессии
+                request.session['timezone'] = timezone
+                # print(timezone)
+                # print(datetime.now(ZoneInfo(timezone)))
+                return JsonResponse({'status': 'success', 'timezone': timezone})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Timezone not provided'}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)

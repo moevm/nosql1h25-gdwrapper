@@ -11,6 +11,7 @@
 {% endblock %}
 
 {% block content %}
+<p>{{ timezone }}</p>
 {# ---------------- ФИЛЬТРЫ ---------------- #}
 <form method="get" class="filter-bar mb-4">
   <div class="row g-3">
@@ -230,6 +231,23 @@
 <script src="{% static 'js/gdwrapper/index.js' %}"></script>
 <script>
 
+</script>
+
+<script>
+  window.onload = function() {
+  		const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  		fetch('/set-timezone/', {
+  					method: 'POST',
+  					headers: {
+  						'Content-Type': 'application/json',
+  						'X-CSRFToken': getCookie('csrftoken'),
+  					},
+  					body: JSON.stringify({
+  						timezone: timezone
+  					}),
+  				});
+  };
 </script>
 
 {# ---------------- МОДАЛЬНОЕ ОКНО ---------------- #}

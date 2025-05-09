@@ -12,4 +12,5 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('import_data/', views.import_data, name='import_data'),
     path('export_data/', views.export_data, name='export_data'),
+    path('set-timezone/', views.set_timezone, name='set_timezone'),
 ]
