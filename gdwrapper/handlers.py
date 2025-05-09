@@ -1,9 +1,11 @@
 from auth.GoogleApiClient import GoogleApiClient
 from gdwrapper.services.MongoService import MongoService
 
+
 def refresh_data_in_mongo():
     client = GoogleApiClient()
     files = client.getAllFiles()
+    mongo_service = MongoService()
     documents = []
     for f in files:
         doc = {
@@ -48,5 +50,4 @@ def refresh_data_in_mongo():
             })
         doc["permissions"] = doc_perms
         documents.append(doc)
-        mongo_service = MongoService()
-        mongo_service.refresh_documents(documents)
+    mongo_service.refresh_documents(documents)
