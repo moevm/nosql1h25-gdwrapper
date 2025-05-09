@@ -8,7 +8,36 @@ function showMoreInfo(btn){
     document.getElementById('detailFileOwner').textContent     = data.ownerEmail;
     document.getElementById('detailFilePermissions').textContent =
         JSON.stringify(data.capabilities, null, 2);
-  }
+    document.getElementById('commentInput').textContent     = data.comment;
+    document.getElementById('saveCommentBtn').setAttribute('document_id', data.id);
+
+}
+
+
+async function createOrUpdateComment(btn){
+    const document_google_id = btn.getAttribute('document_id');
+    const commentInput = document.getElementById('commentInput');
+    var text = commentInput.value.trim(); 
+    const response = await fetch('comment/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            'document_google_id': document_google_id,
+            'comment_text': text
+        })
+    });
+    const data = await response.json();
+    if(response.ok){
+        alert('Комментарий успешно добавлен', 'success');
+        window.location.reload();
+    }
+    else{
+        alert(data.error);
+    }
+}
   
 
 function refreshData(event) {

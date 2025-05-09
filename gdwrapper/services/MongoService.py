@@ -18,10 +18,9 @@ class MongoService:
         coll_name = getattr(settings, "COLL_NAME",
                             os.getenv("MONGO_COLLECTION", "documents"))
 
-        self.col = (
-            MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
-            [db_name][coll_name]
-        )
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        self.col = client[db_name][coll_name]
+        self.comments = client[db_name]['comments']
 
     @staticmethod
     def _to_float(v: Union[str, float, None]) -> Optional[float]:
@@ -109,6 +108,14 @@ class MongoService:
             cursor = cursor.sort(sort_field, direction)
 
         return list(cursor)
+    
+    def get_comment(self, document_google_id: str):
+        return self.comments.find_one({'document_google_id': document_google_id})
+
+    def create_or_update_comment(self, comment_text: str, document_google_id: str):
+        query = {"document_google_id": document_google_id}
+        new_values = {"$set": { "text": comment_text }, '$setOnInsert': query}
+        self.comments.find_one_and_update(query, new_values, upsert=True)
     
     def add_document(self, file_data: Dict[str, Any]) -> str:
         """
