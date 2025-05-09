@@ -7,6 +7,7 @@
 {% block styles %}
     {% load static %}
     <link href="{% static 'css/gdwrapper/index.css' %}" rel="stylesheet">
+    <script src="{% static 'js/gdwrapper/index.js' %}"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 {% endblock %}
 
@@ -14,7 +15,27 @@
 {# ---------------- ФИЛЬТРЫ ---------------- #}
 <form method="get" class="filter-bar mb-4">
   <div class="row g-3">
+    {# ------ СОРТИРОВКА ------ #}
+    <div class="col-md-3">
+      <label for="sort_field" class="form-label">Сортировать по</label>
+      <select id="sort_field" name="sort_field" class="form-select">
+        <option value=""            {% if not filters.sort_field %}selected{% endif %}>Нет</option>
+        <option value="name"        {% if filters.sort_field == 'name' %}selected{% endif %}>Имя файла</option>
+        <option value="ownerEmail"  {% if filters.sort_field == 'ownerEmail' %}selected{% endif %}>Владелец</option>
+          <option value="mimeType"    {% if filters.sort_field == 'mimeType' %}selected{% endif %}>Тип файла</option>
+        <option value="createdTime" {% if filters.sort_field == 'createdTime' %}selected{% endif %}>Дата создания</option>
+        <option value="modifiedTime"{% if filters.sort_field == 'modifiedTime' %}selected{% endif %}>Дата изменения</option>
+        <option value="size"        {% if filters.sort_field == 'size' %}selected{% endif %}>Размер</option>
+      </select>
+    </div>
 
+    <div class="col-md-3">
+      <label for="sort_order" class="form-label">Направление</label>
+      <select id="sort_order" name="sort_order" class="form-select">
+        <option value="asc"  {% if filters.sort_order == 'asc'  %}selected{% endif %}>По возрастанию</option>
+        <option value="desc" {% if filters.sort_order == 'desc' %}selected{% endif %}>По убыванию</option>
+      </select>
+    </div>
     <div class="col-md-3">
       <label for="mime_group" class="form-label">Тип файла</label>
       <select id="mime_group" name="mime_group" class="form-select">
@@ -43,16 +64,15 @@
     </div>
 
     <div class="col-md-3">
-      <label for="size_range" class="form-label">Размер файла</label>
-      <select id="size_range" name="size_range" class="form-select">
-         <option value=""        {% if not filters.size_range %}selected{% endif %}>Любой</option>
-         <option value="lt100"   {% if filters.size_range == 'lt100' %}selected{% endif %}>до 100 КБ</option>
-         <option value="100_500" {% if filters.size_range == '100_500' %}selected{% endif %}>100 – 500 КБ</option>
-         <option value="500_1m"  {% if filters.size_range == '500_1m' %}selected{% endif %}>500 КБ – 1 МБ</option>
-         <option value="1m_10m"  {% if filters.size_range == '1m_10m' %}selected{% endif %}>1 – 10 МБ</option>
-         <option value="10m_100m"  {% if filters.size_range == '1m_10m' %}selected{% endif %}>10 – 100 МБ</option>
-         <option value="gt100m"   {% if filters.size_range == 'gt10m' %}selected{% endif %}>более 100 МБ</option>
-      </select>
+      <label class="form-label">Размер файла, КБ (от / до)</label>
+      <div class="input-group">
+        <input id="size_from_kb" name="size_from_kb" type="number" step="1" min="0"
+               class="form-control"
+               placeholder="мин" value="{{ filters.size_from_kb|default_if_none:'' }}">
+        <input id="size_to_kb" name="size_to_kb" type="number" step="1" min="0"
+               class="form-control"
+               placeholder="макс" value="{{ filters.size_to_kb|default_if_none:'' }}">
+      </div>
     </div>
 
     <div class="col-md-3">
@@ -94,15 +114,75 @@
        onclick="refreshData(event)">Синхронизировать данные</a>
   </div>
   <div class="buttons-group mt-2 mt-md-0">
-    <button class="btn btn-danger">Удалить выбранные</button>
     <button class="btn btn-success">Скачать выбранные</button>
-    <button class="btn btn-primary">Загрузить файлы</button>
+    <button class="btn btn-danger">Удалить выбранные</button>
+  </div>
+  {% if is_authenticated %}
+    <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exportModal">
+      <i class="fas fa-file-export"></i> Экспорт данных
+    </button>
+  {% else %}
+    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#importModal">
+      <i class="fas fa-file-import"></i> Импорт данных
+    </button>
+  {% endif %}
+</div>
+
+<!-- Модальное окно экспорта -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Экспорт данных</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Будет создан JSON-файл со всеми метаданными файлов из базы данных.</p>
+        <p class="text-muted small">
+          <ul class="small">
+            <li>data.json - все метаданные файлов</li>
+          </ul>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" onclick="exportData()">
+          <i class="fas fa-file-archive"></i> Создать файл
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно импорта -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Импорт данных</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i> Выберите JSON-файл, полученный при экспорте данных
+        </div>
+        <input type="file" id="importFile" class="form-control" accept=".json">
+        <div id="importError" class="alert alert-danger mt-2 d-none"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary" onclick="importData()" id="importBtn">
+          <i class="fas fa-file-import"></i> Импортировать
+        </button>
+        <div class="spinner-border text-primary d-none" id="importSpinner"></div>
+      </div>
+    </div>
   </div>
 </div>
 
 {# ---------------- ТАБЛИЦА ---------------- #}
 
-{% if not is_authenticated %}
+{% if not documents and not is_authenticated %}
     <div class="row justify-content-center align-items-center">
         <div class="col-auto mt-5 text-center">
             <i class="fa-regular fa-face-sad-tear sad-face-icon"></i>
@@ -129,12 +209,12 @@
                         <tr>
                             <td><input type="checkbox" class="form-check-input"></td>
                             <td>{{ document.name }}</td>
-                            <td>{{ document.mimeType }}</td>
+                            <td>{{ document.typeLabel }}</td>
                             <td>{{ document.size }}</td>
                             <td>{{ document.modifiedTime }}</td>
                             <td><button document_id="{{ document.id }}" onclick='showMoreInfo(this)' class="btn btn-sm btn-outline-info details-btn" data-bs-toggle="modal" data-bs-target="#fileDetailsModal">Подробнее</button></td>
                             {{ document | json_script:document.id  }}
-                        </tr>
+                          </td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -145,6 +225,7 @@
 {% endblock %}
 
 {% block body_tail %}
+
 {# ---------------- МОДАЛЬНОЕ ОКНО ---------------- #}
 <div class="modal fade" id="fileDetailsModal" tabindex="-1"
      aria-labelledby="fileDetailsModalLabel" aria-hidden="true">
@@ -162,16 +243,23 @@
         <div class="row mb-3"><div class="col-md-4 fw-bold">Дата изменения:</div><div class="col-md-8" id="detailFileModified"></div></div>
         <div class="row mb-3"><div class="col-md-4 fw-bold">Владелец:</div><div class="col-md-8" id="detailFileOwner"></div></div>
         <div class="row mb-3"><div class="col-md-4 fw-bold">Права доступа:</div><pre class="col-md-8" id="detailFilePermissions"></pre></div>
+        <!-- Секция комментария -->
+        <div class="comment-section">
+          <h6>Комментарий:</h6>
+          <div id="commentEdit" style="display: block;">
+              <textarea id="commentInput" class="form-control" rows="3" 
+                        placeholder="Добавьте комментарий..."></textarea>
+              <div class="mt-2">
+                  <button id="saveCommentBtn" class="btn btn-primary btn-sm" onclick="createOrUpdateComment(this)">Сохранить</button>
+              </div>
+          </div>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" type="button">Скачать</button>
-      </div>
+<!--      <div class="modal-footer">-->
+<!--        <button class="btn btn-primary" type="button">Скачать</button>-->
+<!--      </div>-->
     </div>
   </div>
 </div>
 
-<script src="{% static 'js/gdwrapper/index.js' %}"></script>
-<script>
-
-</script>
 {% endblock %}

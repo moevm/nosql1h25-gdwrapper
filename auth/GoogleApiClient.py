@@ -74,9 +74,25 @@ class GoogleApiClient:
         Returns:
             List[dict]: List of files data
         """
-        results = (
-            self.__service.files()
-            .list(fields='files({})'.format(', '.join(GD_FIELDS)))
-            .execute()
-        )
+        all_files = []
+        page_token = None
+        while True:
+            try:
+                results = (
+                    self.__service.files()
+                    .list(
+                        fields=f"files({', '.join(GD_FIELDS)}), nextPageToken",
+                        pageToken=page_token,
+                        pageSize=1000
+                    )
+                    .execute()
+                )
+                all_files.extend(results.get("files", []))
+                page_token = results.get('nextPageToken')
+
+                if not page_token:
+                    break
+            except Exception as e:
+                print(f"Error fetching files: {e}")
+                break
         return results.get("files", [])
