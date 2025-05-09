@@ -139,6 +139,9 @@ def index(request):
             label = "Прочее"
 
         doc["typeLabel"] = label
+        comment = mongo_service.get_comment(doc['id'])
+        if comment is not None:
+            doc['comment'] = comment['text']
 
     is_authenticated = os.path.exists(GD_TOKEN_PATH)
     return render(request, "gdwrapper/index.html", {
@@ -293,3 +296,12 @@ def import_data(request):
             
     except Exception as e:
         return JsonResponse({"error": f"Непредвиденная ошибка: {str(e)}"}, status=500)
+    
+
+@require_http_methods(["POST"])
+def create_or_update_comment(request):
+    try:
+        mongo_service.create_or_update_comment(**json.loads(request.body.decode("utf-8")))
+        return JsonResponse({"status": "Comment created successfully"})
+    except pymongo.errors.ServerSelectionTimeoutError as e:
+        return JsonResponse({"error": f"Ошибка подключения к MongoDB: {str(e)}"}, status=503)

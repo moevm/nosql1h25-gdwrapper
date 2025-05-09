@@ -113,9 +113,8 @@
        onclick="refreshData(event)">Синхронизировать данные</a>
   </div>
   <div class="buttons-group mt-2 mt-md-0">
-    <button class="btn btn-danger">Удалить выбранные</button>
     <button class="btn btn-success">Скачать выбранные</button>
-    <button class="btn btn-primary">Загрузить файлы</button>
+    <button class="btn btn-danger">Удалить выбранные</button>
   </div>
   {% if is_authenticated %}
     <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exportModal">
@@ -249,10 +248,21 @@
         <div class="row mb-3"><div class="col-md-4 fw-bold">Дата изменения:</div><div class="col-md-8" id="detailFileModified"></div></div>
         <div class="row mb-3"><div class="col-md-4 fw-bold">Владелец:</div><div class="col-md-8" id="detailFileOwner"></div></div>
         <div class="row mb-3"><div class="col-md-4 fw-bold">Права доступа:</div><pre class="col-md-8" id="detailFilePermissions"></pre></div>
+        <!-- Секция комментария -->
+        <div class="comment-section">
+          <h6>Комментарий:</h6>
+          <div id="commentEdit" style="display: block;">
+              <textarea id="commentInput" class="form-control" rows="3" 
+                        placeholder="Добавьте комментарий..."></textarea>
+              <div class="mt-2">
+                  <button id="saveCommentBtn" class="btn btn-primary btn-sm" onclick="createOrUpdateComment(this)">Сохранить</button>
+              </div>
+          </div>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary" type="button">Скачать</button>
-      </div>
+<!--      <div class="modal-footer">-->
+<!--        <button class="btn btn-primary" type="button">Скачать</button>-->
+<!--      </div>-->
     </div>
   </div>
 </div>
