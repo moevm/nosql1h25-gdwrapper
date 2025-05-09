@@ -16,22 +16,33 @@ function handleStatsFormSubmit(event) {
         return;
     }
 
+    if (x === "mimeType" && y === "modifiedTime" || y === "mimeType" && x === "modifiedTime" ||
+        x === "modifiedTime" && y === "ownerEmail" || y === "modifiedTime" && x === "ownerEmail"
+    ) {
+        alert("Недопустимая комбинация параметров для отображения статистики");
+        return;
+    }
+
+    if (x === "size" && y === "modifiedTime") {
+        alert("Время изменения будет отображено по оси Х, средний размер файлов по оси Y");
+    }
+
     fetchStatsData(x, y);
 }
 
 function fetchStatsData(xAttr, yAttr) {
     fetch(`/stats/data?x=${xAttr}&y=${yAttr}`)
         .then((response) => response.json())
-        .then(({ type, data }) => {
+        .then(({ type, data, horizontal }) => {
             switch (type) {
                 case "bar":
-                    renderBarChart(data, xAttr, yAttr);
+                    renderBarChart(data, horizontal, xAttr, yAttr);
                     break;
                 case "table":
                     renderStatsTable(data, xAttr, yAttr);
                     break;
                 case "graph":
-                    renderGraph(data, xAttr, yAttr);
+                    renderGraph(data, horizontal, xAttr, yAttr);
                     break;
                 default:
                     alert("Невозможно построить график для выбранных параметров.");
@@ -44,7 +55,8 @@ function fetchStatsData(xAttr, yAttr) {
 
 let chartInstance = null;
 
-function renderBarChart(data, xAttr, yAttr) {
+// Функция отображения столбчатых диаграмм
+function renderBarChart(data, horizontal, xAttr, yAttr) {
     const tableDiv = document.getElementById("stats-table");
     tableDiv.innerHTML = "";
     document.getElementById("stats-chart").style.display = "block";
@@ -58,16 +70,15 @@ function renderBarChart(data, xAttr, yAttr) {
         chartInstance.destroy();
     }
 
-    const isXAxisNumeric = typeof data[0]?.x === "number";
-    const isYAxisNumeric = typeof data[0]?.y === "number";
-    const useHorizontalBar = isXAxisNumeric && !isYAxisNumeric;
+    const sizeOnYAxis = yAttr === "size";
+    const sizeOnXAxis = xAttr === "size";
 
     chartInstance = new Chart(ctx, {
         type: "bar",
         data: {
             labels: labels,
             datasets: [{
-                label: `${yAttr} по ${xAttr}`,
+                label: `${yAttr === "size" ? "Размер (КБ)" : yAttr}`,
                 data: values,
                 backgroundColor: "rgba(54, 162, 235, 0.6)",
                 borderColor: "rgba(54, 162, 235, 1)",
@@ -75,30 +86,53 @@ function renderBarChart(data, xAttr, yAttr) {
             }]
         },
         options: {
-            indexAxis: useHorizontalBar ? 'y' : 'x',
+            indexAxis: horizontal ? 'y' : 'x',
             responsive: true,
             plugins: {
                 legend: {
-                    position: 'top',
-                    display: 'true'
+                    display: false
                 },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    callbacks: {
+                        label: function (context) {
+                            let value = context.raw;
+                            if (sizeOnYAxis || sizeOnXAxis) {
+                                value = value + " КБ";
+                            }
+                            return `${context.dataset.label}: ${value}`;
+                        }
+                    }
                 }
             },
             scales: {
                 x: {
-                    beginAtZero: true
+                    ticks: {
+                        callback: function (value, index) {
+                            if (sizeOnXAxis) {
+                                return value + " КБ";
+                            }
+                            return labels[value];
+                        }
+                    }
                 },
                 y: {
-                    beginAtZero: true
+                    ticks: {
+                        callback: function (value, index) {
+                            if (sizeOnYAxis) {
+                                return value + " КБ";
+                            }
+                            return labels[value];
+                        }
+                    }
                 }
             }
         }
     });
 }
 
+// Функция отображения таблиц
 function renderStatsTable(data, xAttr, yAttr) {
     const chart = document.getElementById("stats-chart");
     chart.style.display = "none";
@@ -150,7 +184,8 @@ function renderStatsTable(data, xAttr, yAttr) {
     container.appendChild(table);
 }
 
-function renderGraph(data, xAttr, yAttr) {
+// Функция отображения графиков
+function renderGraph(data, horizontal, xAttr, yAttr) {
     const tableDiv = document.getElementById("stats-table");
     tableDiv.innerHTML = "";
     document.getElementById("stats-chart").style.display = "block";
@@ -164,12 +199,15 @@ function renderGraph(data, xAttr, yAttr) {
         chartInstance.destroy();
     }
 
+    const sizeOnYAxis = yAttr === "size";
+    const sizeOnXAxis = xAttr === "size";
+
     chartInstance = new Chart(ctx, {
         type: "line",
         data: {
             labels: labels,
             datasets: [{
-                label: `${yAttr} по ${xAttr}`,
+                label: "Размер (КБ)",
                 data: values,
                 backgroundColor: "rgba(75, 192, 192, 0.4)",
                 borderColor: "rgba(75, 192, 192, 1)",
@@ -187,11 +225,56 @@ function renderGraph(data, xAttr, yAttr) {
             },
             plugins: {
                 legend: {
-                    position: 'top'
+                    display: false
                 },
                 tooltip: {
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    callbacks: {
+                        label: function (context) {
+                            let value = context.raw;
+                            if (sizeOnYAxis || sizeOnXAxis) {
+                                value = value + " КБ";
+                            }
+                            return `${context.dataset.label}: ${value}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        callback: function (value, index) {
+                            if (!horizontal) {
+                                if (sizeOnXAxis) {
+                                    return value + " КБ";
+                                }
+                                return labels[value];
+                            } else {
+                                if (sizeOnYAxis) {
+                                    return value + " КБ";
+                                }
+                                return labels[value];
+                            }
+                        }
+                    }
+                },
+                y: {
+                    ticks: {
+                        callback: function (value, index) {
+                            if (!horizontal) {
+                                if (sizeOnYAxis) {
+                                    return value + " КБ";
+                                }
+                                return labels[value];
+                            } else {
+                                if (sizeOnXAxis) {
+                                    return value + " КБ";
+                                }
+                                return labels[value];
+                            }
+                        }
+                    }
                 }
             }
         }

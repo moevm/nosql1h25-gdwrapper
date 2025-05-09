@@ -171,6 +171,7 @@ def get_stats_data(request):
     documents = mongo_service.get_all_documents()
 
     data = []
+    horizontal = False
 
     if chart_type == "bar":
         sample_doc = documents[0]
@@ -179,6 +180,7 @@ def get_stats_data(request):
 
         if x_is_numeric and not y_is_numeric:
             x_attr, y_attr = y_attr, x_attr
+            horizontal = True
 
         grouped_data = defaultdict(list)
         for doc in documents:
@@ -192,8 +194,8 @@ def get_stats_data(request):
     elif chart_type == "table":
         table = defaultdict(lambda: defaultdict(int))
         for doc in documents:
-            row = doc.get(x_attr)
-            col = doc.get(y_attr)
+            row = doc.get(y_attr)
+            col = doc.get(x_attr)
             if row is not None and col is not None:
                 table[row][col] += 1
         data = [{"row": r, "cols": dict(c)} for r, c in table.items()]
@@ -201,6 +203,7 @@ def get_stats_data(request):
     elif chart_type == "graph":
         if x_attr != "modifiedTime":
             x_attr, y_attr = y_attr, x_attr
+            horizontal = True
 
         grouped_data = defaultdict(list)
         for doc in documents:
@@ -213,7 +216,7 @@ def get_stats_data(request):
                 grouped_data[date_key].append(y_val)
             except Exception:
                 continue
-        data = [{"x": date, "y": sum(vals)}
+        data = [{"x": date, "y": sum(vals) / len(vals)}
                 for date, vals in sorted(grouped_data.items())]
 
-    return JsonResponse({"type": chart_type, "data": data})
+    return JsonResponse({"type": chart_type, "data": data, "horizontal": horizontal})
