@@ -23,6 +23,16 @@ from .document_formatter.formatters import formatters_manager
 from .handlers import refresh_data_in_mongo
 from .settings import GD_TOKEN_PATH
 
+from collections import defaultdict
+
+
+AXIS_TYPES = {
+    "mimeType": "categorical",
+    "ownerEmail": "categorical",
+    "size": "numerical",
+    "modifiedTime": "numerical",
+}
+
 mongo_service = MongoService()
 
 
@@ -153,7 +163,8 @@ def index(request):
 
 def stats(request):
     is_authenticated = False
-    if os.path.exists(GD_TOKEN_PATH): is_authenticated = True
+    if os.path.exists(GD_TOKEN_PATH):
+        is_authenticated = True
     return render(request, "gdwrapper/stats.html", {
         'is_authenticated': is_authenticated,
     })
@@ -180,6 +191,92 @@ def refresh_data(request):
         return JsonResponse({"redirect_to": reverse('auth:auth')}, status=403)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+def determine_chart_type(x_attr, y_attr):
+    x_type = AXIS_TYPES.get(x_attr)
+    y_type = AXIS_TYPES.get(y_attr)
+
+    if x_type == "categorical" and y_type == "numerical" or x_type == "numerical" and y_type == "categorical":
+        return "bar"
+    elif x_type == "categorical" and y_type == "categorical":
+        return "table"
+    elif x_type == "numerical" and y_type == "numerical":
+        return "graph"
+    else:
+        return "error"
+
+
+def is_numeric(attr, sample_value):
+    if attr == "size":
+        return True
+    if attr == "modifiedTime":
+        return True
+    return isinstance(sample_value, (int, float))
+
+
+@require_http_methods(["GET"])
+def get_stats_data(request):
+    x_attr = request.GET.get('x')
+    y_attr = request.GET.get('y')
+
+    if not x_attr or not y_attr or x_attr == y_attr:
+        return JsonResponse({'error': 'Invalid parameters'}, status=400)
+
+    chart_type = determine_chart_type(x_attr, y_attr)
+    documents = mongo_service.get_all_documents()
+
+    data = []
+    horizontal = False
+
+    if chart_type == "bar":
+        sample_doc = documents[0]
+        x_is_numeric = is_numeric(x_attr, sample_doc[x_attr])
+        y_is_numeric = is_numeric(y_attr, sample_doc[y_attr])
+
+        if x_is_numeric and not y_is_numeric:
+            x_attr, y_attr = y_attr, x_attr
+            horizontal = True
+
+        grouped_data = defaultdict(list)
+        for doc in documents:
+            key = doc.get(x_attr)
+            val = doc.get(y_attr)
+            if key is not None and isinstance(val, (int, float)):
+                grouped_data[key].append(val)
+        data = [{"x": k, "y": sum(v) / len(v) / 1024}  # добавлено, тк на данный момент среднее вычисляется только для размера файла, их отображение у нас в КБ, в бд хранятся в Б, поэтому переводим из Б в КБ
+                for k, v in grouped_data.items()]
+
+    elif chart_type == "table":
+        table = defaultdict(lambda: defaultdict(int))
+        for doc in documents:
+            row = doc.get(y_attr)
+            col = doc.get(x_attr)
+            if row is not None and col is not None:
+                table[row][col] += 1
+        data = [{"row": r, "cols": dict(c)} for r, c in table.items()]
+
+    elif chart_type == "graph":
+        if x_attr != "modifiedTime":
+            x_attr, y_attr = y_attr, x_attr
+            horizontal = True
+
+        grouped_data = defaultdict(list)
+        for doc in documents:
+            try:
+                x_val = doc.get(x_attr)
+                y_val = doc.get(y_attr)
+                if not x_val or not isinstance(y_val, (int, float)):
+                    continue
+                date_key = x_val.split("T")[0]  # только дата
+                grouped_data[date_key].append(y_val)
+            except Exception:
+                continue
+        data = [{"x": date, "y": sum(vals) / len(vals)}
+                for date, vals in sorted(grouped_data.items())]
+
+    return JsonResponse({"type": chart_type, "data": data, "horizontal": horizontal})
+
 
 @require_http_methods(["GET"])
 def export_data(request):
