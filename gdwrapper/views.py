@@ -188,7 +188,7 @@ def get_stats_data(request):
             val = doc.get(y_attr)
             if key is not None and isinstance(val, (int, float)):
                 grouped_data[key].append(val)
-        data = [{"x": k, "y": sum(v) / len(v)}
+        data = [{"x": k, "y": sum(v) / len(v) / 1024}  # добавлено, тк на данный момент среднее вычисляется только для размера файла, их отображение у нас в КБ, в бд хранятся в Б, поэтому переводим из Б в КБ
                 for k, v in grouped_data.items()]
 
     elif chart_type == "table":
