@@ -76,7 +76,7 @@ class GoogleApiClient:
         """
         results = (
             self.__service.files()
-            .list(fields='files({})'.format(', '.join(GD_FIELDS)))
+            .list(q="trashed=false", fields='files({})'.format(', '.join(GD_FIELDS)))
             .execute()
         )
         return results.get("files", [])
