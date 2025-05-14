@@ -1,8 +1,55 @@
 document.addEventListener("DOMContentLoaded", function () {
+
+    const xSelect = document.getElementById("x-select");
+    const ySelect = document.getElementById("y-select");
+
+    const incompatible = {
+        mimeType: ["mimeType", "modifiedTime"],
+        size: ["size", "modifiedTime"],
+        modifiedTime: ["mimeType", "modifiedTime", "ownerEmail"],
+        ownerEmail: ["modifiedTime", "ownerEmail"]
+    };
+
+    ySelect.disabled = true;
+
+    xSelect.addEventListener("change", function () {
+        const selectedX = xSelect.value;
+
+        if (!selectedX) {
+            ySelect.disabled = true;
+            ySelect.value = "";
+            return;
+        }
+
+        ySelect.disabled = false;
+        const invalidOptions = incompatible[selectedX] || [];
+
+        Array.from(ySelect.options).forEach(option => {
+            if (option.value === "") {
+                option.disabled = false;
+                option.hidden = false;
+                return;
+            }
+
+            if (invalidOptions.includes(option.value) || option.value === selectedX) {
+                option.disabled = true;
+                option.hidden = false;
+            } else {
+                option.disabled = false;
+                option.hidden = false;
+            }
+        });
+
+        if (invalidOptions.includes(ySelect.value) || ySelect.value === selectedX) {
+            ySelect.value = "";
+        }
+    });
+
     const form = document.getElementById("stats-form");
     if (form) {
         form.addEventListener("submit", handleStatsFormSubmit);
     }
+
 });
 
 function handleStatsFormSubmit(event) {
@@ -11,20 +58,9 @@ function handleStatsFormSubmit(event) {
     const x = document.getElementById("x-select").value;
     const y = document.getElementById("y-select").value;
 
-    if (x === y) {
-        alert("Поля X и Y не могут совпадать");
+    if (x === "" || y === "") {
+        alert("Нужно выбрать оба значения и по оси X и по оси Y");
         return;
-    }
-
-    if (x === "mimeType" && y === "modifiedTime" || y === "mimeType" && x === "modifiedTime" ||
-        x === "modifiedTime" && y === "ownerEmail" || y === "modifiedTime" && x === "ownerEmail"
-    ) {
-        alert("Недопустимая комбинация параметров для отображения статистики");
-        return;
-    }
-
-    if (x === "size" && y === "modifiedTime") {
-        alert("Время изменения будет отображено по оси Х, средний размер файлов по оси Y");
     }
 
     fetchStatsData(x, y);

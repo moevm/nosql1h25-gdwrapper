@@ -75,6 +75,17 @@ MIME_LABELS = {
     "audio": "Аудио",
 }
 
+MIME_GROUPS_STATS = {
+    "application/vnd.google-apps.folder": "folder",
+    "application/vnd.google-apps.document": "document",
+    "application/vnd.google-apps.spreadsheet":  "spreadsheet",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "table",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.google-apps.presentation": "presentation",
+    "application/vnd.google-apps.form": "form",
+    "application/pdf": "pdf",
+}
+
 
 @ensure_csrf_cookie
 def index(request):
@@ -126,7 +137,6 @@ def index(request):
             sort_order=sort_order,
         )
 
-    
     for doc in documents:
         if id not in doc:
             doc["id"] = str(doc.get("_id", ""))
@@ -242,16 +252,24 @@ def get_stats_data(request):
         for doc in documents:
             key = doc.get(x_attr)
             val = doc.get(y_attr)
+            print(key, val)
             if key is not None and isinstance(val, (int, float)):
                 grouped_data[key].append(val)
-        data = [{"x": k, "y": sum(v) / len(v) / 1024}  # добавлено, тк на данный момент среднее вычисляется только для размера файла, их отображение у нас в КБ, в бд хранятся в Б, поэтому переводим из Б в КБ
-                for k, v in grouped_data.items()]
+
+        for k, v in grouped_data.items():
+            if k in MIME_GROUPS_STATS.keys():
+                k = MIME_GROUPS_STATS[k]
+            data.append({"x": k, "y": sum(v) / len(v) / 1024})
 
     elif chart_type == "table":
         table = defaultdict(lambda: defaultdict(int))
         for doc in documents:
             row = doc.get(y_attr)
             col = doc.get(x_attr)
+            if y_attr == "mimeType":
+                row = MIME_GROUPS_STATS[row]
+            else:
+                col = MIME_GROUPS_STATS[col]
             if row is not None and col is not None:
                 table[row][col] += 1
         data = [{"row": r, "cols": dict(c)} for r, c in table.items()]
@@ -272,7 +290,7 @@ def get_stats_data(request):
                 grouped_data[date_key].append(y_val)
             except Exception:
                 continue
-        data = [{"x": date, "y": sum(vals) / len(vals)}
+        data = [{"x": date, "y": sum(vals) / len(vals) / 1024}
                 for date, vals in sorted(grouped_data.items())]
 
     return JsonResponse({"type": chart_type, "data": data, "horizontal": horizontal})
@@ -284,12 +302,12 @@ def export_data(request):
     try:
         if not os.path.exists(GD_TOKEN_PATH):
             return JsonResponse({"error": "Требуется авторизация"}, status=403)
-        
+
         documents = list(mongo_service.get_all_documents())
-        
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"gdwrapper_export_{timestamp}.json"
-        
+
         json_data = json_util.dumps({
             "metadata": {
                 "export_date": datetime.now().isoformat(),
@@ -298,12 +316,12 @@ def export_data(request):
             },
             "documents": documents
         }, indent=2)
-        
+
         # Возвращаем JSON файл
         response = HttpResponse(json_data, content_type='application/json')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
-        
+
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -319,30 +337,31 @@ def import_data(request):
             return JsonResponse({"error": "Файл не был загружен"}, status=400)
 
         uploaded_file = request.FILES['file']
-        
+
         if not uploaded_file.name.lower().endswith('.json'):
             return JsonResponse({"error": "Требуется файл в формате JSON"}, status=400)
 
         try:
             file_content = uploaded_file.read().decode('utf-8')
             data = json.loads(file_content)
-            
+
             if not isinstance(data, dict) or 'documents' not in data:
-                raise ValueError("Некорректный формат данных. Ожидается объект с полем 'documents'")
+                raise ValueError(
+                    "Некорректный формат данных. Ожидается объект с полем 'documents'")
 
             mongo_service = MongoService()
-            
+
             valid_documents = []
             errors = []
-            
+
             for i, doc in enumerate(data['documents']):
                 try:
                     if not isinstance(doc, dict):
                         raise ValueError("Документ должен быть объектом")
-                    
+
                     if '_id' not in doc:
                         raise ValueError("Отсутствует обязательное поле '_id'")
-                    
+
                     valid_documents.append(doc)
                 except Exception as e:
                     errors.append(f"Документ {i}: {str(e)}")
@@ -352,7 +371,7 @@ def import_data(request):
 
             imported_ids = []
             updated_count = 0
-            
+
             for doc in valid_documents:
                 try:
                     doc_id = mongo_service.add_document(doc)
@@ -377,7 +396,7 @@ def import_data(request):
                 response_data["error_count"] = len(errors)
                 response_data["sample_errors"] = errors[:3]
                 return JsonResponse(response_data, status=207)
-            
+
             return JsonResponse(response_data)
 
         except json.JSONDecodeError as e:
@@ -390,15 +409,16 @@ def import_data(request):
             return JsonResponse({"error": f"Ошибка подключения к MongoDB: {str(e)}"}, status=503)
         except Exception as e:
             return JsonResponse({"error": f"Ошибка сервера: {str(e)}"}, status=500)
-            
+
     except Exception as e:
         return JsonResponse({"error": f"Непредвиденная ошибка: {str(e)}"}, status=500)
-    
+
 
 @require_http_methods(["POST"])
 def create_or_update_comment(request):
     try:
-        mongo_service.create_or_update_comment(**json.loads(request.body.decode("utf-8")))
+        mongo_service.create_or_update_comment(
+            **json.loads(request.body.decode("utf-8")))
         return JsonResponse({"status": "Comment created successfully"})
     except pymongo.errors.ServerSelectionTimeoutError as e:
         return JsonResponse({"error": f"Ошибка подключения к MongoDB: {str(e)}"}, status=503)
