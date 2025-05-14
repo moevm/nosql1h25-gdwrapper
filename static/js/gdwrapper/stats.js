@@ -63,7 +63,16 @@ function handleStatsFormSubmit(event) {
         return;
     }
 
+    const btn = document.getElementById("submit-button");
+    const spinner = btn.querySelector('.spinner-border');
+    spinner.classList.remove('d-none');
+    btn.classList.add('disabled');
+
     fetchStatsData(x, y);
+
+    spinner.classList.add('d-none');
+    btn.classList.remove('disabled');
+
 }
 
 function fetchStatsData(xAttr, yAttr) {

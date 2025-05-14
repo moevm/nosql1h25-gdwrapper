@@ -78,3 +78,13 @@
         display: none !important;
     }
 }
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinner-border {
+    animation: spin 0.75s linear infinite;
+    margin-right: 5px;
+}
