@@ -266,6 +266,10 @@ def get_stats_data(request):
         for doc in documents:
             row = doc.get(y_attr)
             col = doc.get(x_attr)
+            if y_attr == "mimeType":
+                row = MIME_GROUPS_STATS[row]
+            else:
+                col = MIME_GROUPS_STATS[col]
             if row is not None and col is not None:
                 table[row][col] += 1
         data = [{"row": r, "cols": dict(c)} for r, c in table.items()]
