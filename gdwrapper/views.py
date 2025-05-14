@@ -75,6 +75,17 @@ MIME_LABELS = {
     "audio": "Аудио",
 }
 
+MIME_GROUPS_STATS = {
+    "application/vnd.google-apps.folder": "folder",
+    "application/vnd.google-apps.document": "document",
+    "application/vnd.google-apps.spreadsheet":  "spreadsheet",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "table",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/vnd.google-apps.presentation": "presentation",
+    "application/vnd.google-apps.form": "form",
+    "application/pdf": "pdf",
+}
+
 
 @ensure_csrf_cookie
 def index(request):
@@ -241,10 +252,14 @@ def get_stats_data(request):
         for doc in documents:
             key = doc.get(x_attr)
             val = doc.get(y_attr)
+            print(key, val)
             if key is not None and isinstance(val, (int, float)):
                 grouped_data[key].append(val)
-        data = [{"x": k, "y": sum(v) / len(v) / 1024}  # добавлено, тк на данный момент среднее вычисляется только для размера файла, их отображение у нас в КБ, в бд хранятся в Б, поэтому переводим из Б в КБ
-                for k, v in grouped_data.items()]
+
+        for k, v in grouped_data.items():
+            if k in MIME_GROUPS_STATS.keys():
+                k = MIME_GROUPS_STATS[k]
+            data.append({"x": k, "y": sum(v) / len(v) / 1024})
 
     elif chart_type == "table":
         table = defaultdict(lambda: defaultdict(int))
