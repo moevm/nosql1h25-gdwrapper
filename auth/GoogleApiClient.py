@@ -12,7 +12,7 @@ from .exceptions import UserNotAuthenticated
 
 class GoogleApiClient:
     """A client class for interacting with Google Drive API v3.
-    
+
     This class provides methods to retrieve and manage user files and folders on Google Drive,
     including metadata. It also supports operations like deleting files (soon).
     """
@@ -28,10 +28,11 @@ class GoogleApiClient:
                     creds.refresh(Request())
                 except RefreshError as e:
                     os.remove(GD_TOKEN_PATH)
-                    raise UserNotAuthenticated()   
+                    raise UserNotAuthenticated()
             self.__service = build("drive", "v3", credentials=creds)
-        else: raise UserNotAuthenticated()
-    
+        else:
+            raise UserNotAuthenticated()
+
     @staticmethod
     def authorizeUser() -> Optional[str]:
         """Checks if users token.json file exists and is valid.
@@ -41,7 +42,7 @@ class GoogleApiClient:
             Optional[str]: Auth URL
         """
         if os.path.exists(GD_TOKEN_PATH):
-            return 
+            return
         flow = InstalledAppFlow.from_client_secrets_file(
             GD_CREDENTIALS_PATH, GD_SCOPES,
             redirect_uri=GD_AUTH_CALLBACK_URL
@@ -74,9 +75,26 @@ class GoogleApiClient:
         Returns:
             List[dict]: List of files data
         """
-        results = (
-            self.__service.files()
-            .list(q="trashed=false", fields='files({})'.format(', '.join(GD_FIELDS)))
-            .execute()
-        )
+        all_files = []
+        page_token = None
+        while True:
+            try:
+                results = (
+                    self.__service.files()
+                        .list(
+                        q="trashed=false",
+                        fields=f"files({', '.join(GD_FIELDS)}), nextPageToken",
+                        pageToken=page_token,
+                        pageSize=1000
+                    )
+                        .execute()
+                )
+                all_files.extend(results.get("files", []))
+                page_token = results.get('nextPageToken')
+
+                if not page_token:
+                    break
+            except Exception as e:
+                print(f"Error fetching files: {e}")
+                break
         return results.get("files", [])
