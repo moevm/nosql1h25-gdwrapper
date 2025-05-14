@@ -1,4 +1,3 @@
-{# gdwrapper/index.html #}
 {% extends "base.html" %}
 {% load static humanize %}
 
@@ -110,8 +109,14 @@
             onclick="setAllFilesCheckboxes(true)">Выбрать всё</button>
     <button class="btn btn-outline-primary" type="button"
             onclick="setAllFilesCheckboxes(false)">Отменить выбор</button>
-    <a class="btn btn-outline-primary" href="{% url 'refresh_data' %}"
-       onclick="refreshData(event)">Синхронизировать данные</a>
+
+    {# Кнопка синхронизации с индикатором загрузки #}
+    <a class="btn btn-outline-primary d-inline-flex align-items-center gap-2"
+       href="{% url 'refresh_data' %}"
+       onclick="refreshData(event)">
+        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        <span>Синхронизировать данные</span>
+    </a>
   </div>
   <div class="buttons-group mt-2 mt-md-0">
     <button class="btn btn-success">Скачать выбранные</button>
@@ -261,5 +266,7 @@
     </div>
   </div>
 </div>
+
+<script src="{% static 'js/gdwrapper/index.js' %}"></script>
 
 {% endblock %}

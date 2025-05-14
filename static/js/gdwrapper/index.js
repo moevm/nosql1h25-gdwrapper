@@ -38,13 +38,18 @@ async function createOrUpdateComment(btn){
         alert(data.error);
     }
 }
-  
+
 
 function refreshData(event) {
     event.preventDefault();
-    
-    const url = event.currentTarget.getAttribute('href');
-    
+
+    const btn = event.currentTarget;
+    const spinner = btn.querySelector('.spinner-border');
+    const url = btn.getAttribute('href');
+
+    spinner.classList.remove('d-none');
+    btn.classList.add('disabled');
+
     fetch(url, {
         method: 'POST',
         headers: {
@@ -52,16 +57,21 @@ function refreshData(event) {
             'Accept': 'application/json'
         }
     })
-    .then(response => {
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        if(data.redirect_to){
+        if (data.redirect_to) {
             window.location.href = data.redirect_to;
-        }else{
+        } else {
             alert('Данные успешно синхронизированы', 'success');
             window.location.reload();
         }
+    })
+    .catch(() => {
+        alert('Ошибка при синхронизации', 'danger');
+    })
+    .finally(() => {
+        spinner.classList.add('d-none');
+        btn.classList.remove('disabled');
     });
 }
 
