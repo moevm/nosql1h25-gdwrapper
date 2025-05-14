@@ -4,3 +4,57 @@
 {% block title %}
     Статистика
 {% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Статистика</h2>
+
+    {% if not is_authenticated %}
+    <div class="row justify-content-center align-items-center">
+        <div class="col-auto mt-5 text-center">
+            <i class="fa-regular fa-face-sad-tear sad-face-icon"></i>
+            <h2 class="mt-3">Ой, кажется вы не вошли в аккаунт...</h2>
+            <p class="text-muted">Пожалуйста, авторизуйтесь для просмотра статистики.</p>
+        </div>
+    </div>
+    {% else %}
+
+    <form id="stats-form" class="mb-4">
+        <div class="row">
+            <div class="col">
+                <label>Ось X:</label>
+                <select class="form-control" id="x-select">
+                    <option value="mimeType">Тип файла</option>
+                    <option value="size">Средний размер файла</option>
+                    <option value="modifiedTime">Время изменения</option>
+                    <option value="ownerEmail">Автор</option>
+                </select>
+            </div>
+            <div class="col">
+                <label>Ось Y:</label>
+                <select class="form-control" id="y-select">
+                    <option value="mimeType">Тип файла</option>
+                    <option value="size">Средний размер файла</option>
+                    <option value="modifiedTime">Время изменения</option>
+                    <option value="ownerEmail">Автор</option>
+                </select>
+            </div>
+            <div class="col d-flex align-items-end">
+                <button type="submit" class="btn btn-primary">Построить статистику</button>
+            </div>
+        </div>
+    </form>
+
+    <div id="stats-container">
+        <canvas id="stats-chart"></canvas>
+        <div id="stats-table-wrapper" style="overflow: auto; max-height: 80vh;">
+            <div id="stats-table"></div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/gdwrapper/stats.js' %}"></script>
+{% endblock %}

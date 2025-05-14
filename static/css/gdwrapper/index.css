@@ -51,3 +51,29 @@
         justify-content: space-between;
     }
 }
+
+.toast {
+    min-width: 300px;
+}
+
+#importError.d-none {
+    display: none !important;
+}
+
+.modal-dialog {
+    max-width: 500px;
+}
+
+.btn-primary i, .btn-secondary i {
+    margin-right: 5px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinner-border {
+    animation: spin 0.75s linear infinite;
+    margin-right: 5px;
+}
