@@ -36,16 +36,6 @@ DB_PASSWORD_ENCODED = urllib.parse.quote_plus(DB_PASSWORD)
 # Формируем строку подключения к MongoDB с указанием authSource=admin
 MONGO_URI = f"mongodb://{DB_USER}:{DB_PASSWORD_ENCODED}@{DATABASE_HOST}:{DATABASE_PORT}/{DB_NAME}?authSource=admin"
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'CLIENT': {
-            'host': MONGO_URI,
-        }
-    }
-}
-
-
 # Google Drive API settings
 GD_CREDENTIALS_PATH = path_join(BASE_DIR.parent, "credentials.json")
 GD_TOKEN_PATH = path_join(BASE_DIR.parent, "token.json")
