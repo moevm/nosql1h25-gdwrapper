@@ -18,6 +18,7 @@ import io
 import json
 
 from auth.exceptions import UserNotAuthenticated
+from auth.GoogleApiClient import GoogleApiClient
 from gdwrapper.services.MongoService import MongoService
 from .document_formatter.formatters import formatters_manager
 from .handlers import refresh_data_in_mongo
@@ -65,7 +66,7 @@ MIME_GROUPS = {
 MIME_LABELS = {
     "docx": "Документ",
     "table": "Таблица",
-    "folder": "Папка",
+    # "folder": "Папка",
     "document": "Документ",
     "spreadsheet": "Таблица",
     "presentation": "Презентация",
@@ -180,14 +181,6 @@ def stats(request):
     })
 
 
-@require_http_methods(["GET"])
-def get_all_files(request):
-    docs = mongo_service.get_all_documents()
-    for d in docs:
-        d["_id"] = str(d["_id"])
-    return JsonResponse({"data": docs})
-
-
 @require_http_methods(["POST"])
 def refresh_data(request):
     """
@@ -234,7 +227,7 @@ def get_stats_data(request):
         return JsonResponse({'error': 'Invalid parameters'}, status=400)
 
     chart_type = determine_chart_type(x_attr, y_attr)
-    documents = mongo_service.get_all_documents()
+    documents = mongo_service.get_documents()
 
     data = []
     horizontal = False
@@ -412,6 +405,18 @@ def import_data(request):
 
     except Exception as e:
         return JsonResponse({"error": f"Непредвиденная ошибка: {str(e)}"}, status=500)
+
+
+@require_http_methods(["POST"])
+def delete_files(request):
+    file_ids = json.loads(request.body.decode("utf-8"))["file_ids"]
+    try:
+        GoogleApiClient().deleteFiles(file_ids)
+    except UserNotAuthenticated:
+        return JsonResponse({"error": "Ошибка при удалении файлов: вы не вошли в аккаунт"}, status=403)
+    if mongo_service.delete_documents(file_ids):
+        return JsonResponse({"status": "Файлы были успешно удалены"}, status=200)
+    return JsonResponse({"error": "Ошибка при удалении файлов"}, status=400)
 
 
 @require_http_methods(["POST"])

@@ -39,7 +39,7 @@
       <label for="mime_group" class="form-label">Тип файла</label>
       <select id="mime_group" name="mime_group" class="form-select">
         <option value=""            {% if not filters.mime_group %}selected{% endif %}>Любой</option>
-        <option value="folder"      {% if filters.mime_group == 'folder' %}selected{% endif %}>Папки</option>
+        <!-- <option value="folder"      {% if filters.mime_group == 'folder' %}selected{% endif %}>Папки</option> -->
         <option value="document"    {% if filters.mime_group == 'document' %}selected{% endif %}>Документы</option>
         <option value="spreadsheet" {% if filters.mime_group == 'spreadsheet' %}selected{% endif %}>Таблицы</option>
         <option value="presentation"{% if filters.mime_group == 'presentation' %}selected{% endif %}>Презентации</option>
@@ -120,7 +120,10 @@
   </div>
   <div class="buttons-group mt-2 mt-md-0">
     <button class="btn btn-success">Скачать выбранные</button>
-    <button class="btn btn-danger">Удалить выбранные</button>
+    <a class="btn btn-danger d-inline-flex align-items-center gap-2" href="{% url 'delete_files' %}" onclick="deleteChosenFiles(event)">
+      <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+      <span>Удалить выбранные</span>
+    </a>
   </div>
   {% if is_authenticated %}
     <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exportModal">
@@ -212,7 +215,7 @@
                 <tbody>
                     {% for document in documents %}
                         <tr>
-                            <td><input type="checkbox" class="form-check-input"></td>
+                            <td><input value="{{ document.id }}" type="checkbox" class="form-check-input"></td>
                             <td>{{ document.name }}</td>
                             <td>{{ document.typeLabel }}</td>
                             <td>{{ document.size }}</td>

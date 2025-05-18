@@ -4,8 +4,9 @@ from typing import Optional, Union, List, Dict, Any
 from datetime import datetime
 
 from django.conf import settings
-from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo import ASCENDING, DESCENDING, MongoClient, DeleteOne, UpdateOne
 from pymongo.collation import Collation
+from pymongo.errors import BulkWriteError
 
 
 class MongoService:
@@ -38,9 +39,6 @@ class MongoService:
         suffix = "T23:59:59Z" if end else "T00:00:00Z"
         return f"{date_str}{suffix}"
 
-    def get_all_documents(self) -> List[Dict]:
-        return list(self.col.find({}))
-
     def get_documents(
             self,
             *,
@@ -58,6 +56,8 @@ class MongoService:
             sort_order: Optional[str] = None,
     ) -> List[Dict]:
         q: Dict = {}
+
+        q["mimeType"] = {"$ne": "application/vnd.google-apps.folder"} # skipping folders
 
         if mime_eq:
             q["mimeType"] = mime_eq
@@ -138,6 +138,14 @@ class MongoService:
             
         result = self.col.insert_many(files_data)
         return [str(id) for id in result.inserted_ids]
+    
+    def delete_documents(self, file_ids: List) -> bool:
+        requests = [DeleteOne({'_id': file_id}) for file_id in file_ids]
+        try:
+            self.col.bulk_write(requests, ordered=False)
+            return True
+        except BulkWriteError as bwe:
+            return False
 
     def refresh_documents(self, docs: List[Dict]) -> None:
         self.col.delete_many({})

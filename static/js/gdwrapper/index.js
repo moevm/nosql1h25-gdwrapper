@@ -40,6 +40,47 @@ async function createOrUpdateComment(btn){
 }
 
 
+async function deleteChosenFiles(event){
+    event.preventDefault();
+    let file_ids = [];
+    document.querySelectorAll('.form-check-input').forEach(cb => {
+        if (cb.checked) {
+            file_ids.push(cb.value);
+        }
+    });
+
+    if(file_ids.length == 0){
+        alert("Выберите хотя бы один файл!");
+        return;
+    }
+
+    const btn = event.currentTarget;
+    const spinner = btn.querySelector('.spinner-border');
+    const url = btn.getAttribute('href');
+    spinner.classList.remove('d-none');
+    btn.classList.add('disabled');
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            'file_ids': file_ids
+        })
+    });
+    const data = await response.json();
+    if(response.ok){
+        alert('Файлы успешно удалены', 'success');
+        window.location.reload();
+    }
+    else{
+        alert(data.error);
+    }
+}
+
+
 function refreshData(event) {
     event.preventDefault();
 

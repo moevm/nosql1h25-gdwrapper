@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Iterable
 import os
 from django.urls import reverse
 from google.auth.transport.requests import Request
@@ -6,6 +6,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.exceptions import RefreshError
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.http import BatchHttpRequest
 from gdwrapper.settings import GD_CREDENTIALS_PATH, GD_FIELDS, GD_SCOPES, GD_TOKEN_PATH, GD_AUTH_CALLBACK_URL
 from .exceptions import UserNotAuthenticated
 
@@ -69,6 +70,24 @@ class GoogleApiClient:
     def logout():
         if os.path.exists(GD_TOKEN_PATH): os.remove(GD_TOKEN_PATH)
 
+    def __batch_delete_callback(self, request_id, response, exception):
+        if exception is not None:
+            print(f"Ошибка при удалении файла {request_id}: {exception}")
+        else:
+            print(f"Файл {request_id} успешно удален")
+
+    def deleteFiles(self, file_ids: Iterable):
+        batch = self.__service.new_batch_http_request(callback=self.__batch_delete_callback)
+        
+        for file_id in file_ids:
+            batch.add(self.__service.files().delete(fileId=file_id))
+        
+        try:
+            batch.execute()
+            print("Пакетное удаление завершено")
+        except Exception as e:
+            print(f"Ошибка при выполнении пакетного запроса: {e}")
+
     def getAllFiles(self) -> List[dict]:
         """Make request to Google Drive API to get users files.
 
@@ -97,4 +116,4 @@ class GoogleApiClient:
             except Exception as e:
                 print(f"Error fetching files: {e}")
                 break
-        return results.get("files", [])
+        return all_files
