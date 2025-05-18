@@ -39,7 +39,7 @@ MONGO_URI = f"mongodb://{DB_USER}:{DB_PASSWORD_ENCODED}@{DATABASE_HOST}:{DATABAS
 # Google Drive API settings
 GD_CREDENTIALS_PATH = path_join(BASE_DIR.parent, "credentials.json")
 GD_TOKEN_PATH = path_join(BASE_DIR.parent, "token.json")
-GD_SCOPES = ["https://www.googleapis.com/auth/drive.metadata.readonly"]
+GD_SCOPES = ["https://www.googleapis.com/auth/drive"]
 GD_FIELDS = [
             'mimeType',
             'size',

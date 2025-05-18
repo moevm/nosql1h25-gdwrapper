@@ -15,7 +15,8 @@ def refresh_data_in_mongo():
             "modifiedTime": f.get("modifiedTime"),
             "ownerEmail": None,
             "capabilities": {},
-            "permissions": []
+            "permissions": [],
+            "parents": f.get("parents")
         }
         if "owners" in f and len(f["owners"]) > 0:
             doc["ownerEmail"] = f["owners"][0].get("emailAddress")

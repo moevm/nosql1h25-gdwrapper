@@ -5,8 +5,8 @@ from . import views
 
 urlpatterns = [
     path('refresh/', views.refresh_data, name='refresh_data'),
-    path('files/', views.get_all_files, name='get_all_files'),
     path('comment/', views.create_or_update_comment, name='create_or_update_comment'),
+    path('files/delete/', views.delete_files, name='delete_files'),
     # path('admin/', admin.site.urls),
     path('auth/', include('auth.urls')),
     path('stats/', views.stats, name='stats'),
